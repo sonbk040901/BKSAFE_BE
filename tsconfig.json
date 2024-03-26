@@ -1,0 +1,65 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "~/*": [
+        "src/*"
+      ],
+      "~decors/*": [
+        "src/common/decorators/*"
+      ],
+      "~exceptions/*": [
+        "src/common/exceptions/*"
+      ],
+      "~interfaces/*": [
+        "src/common/interfaces/*"
+      ],
+      "~pipes/*": [
+        "src/common/pipes/*"
+      ],
+      "~dto/*": [
+        "src/common/dto/*"
+      ],
+      "~entities/*": [
+        "src/entities/*"
+      ],
+      "~repos/*": [
+        "src/repositories/*"
+      ],
+      "~utils/*": [
+        "src/utils/*"
+      ],
+      "~guards/*": [
+        "src/guards/*"
+      ],
+      "@auth/*": [
+        "src/modules/auth/*"
+      ],
+      "@booking/*": [
+        "src/modules/booking/*"
+      ],
+      "@map/*": [
+        "src/modules/map/*"
+      ],
+      "@driver/*": [
+        "src/modules/driver/*"
+      ]
+    }
+  }
+}
