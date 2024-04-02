@@ -31,6 +31,13 @@ export class AuthService {
     private bcryptService: BcryptService,
   ) {}
 
+  async verify(token: string) {
+    const { id } = this.jwtService.verify<AuthPayload>(token);
+    const user = await this.accountRepository.findOneBy({ id });
+    if (!user) throw new EmailOrPasswordIncorrectException();
+    return user;
+  }
+
   async register(registerDto: RegisterDto) {
     //todo: gửi mã xác nhận qua email
     let account = await this.accountRepository.findOneByEmail(

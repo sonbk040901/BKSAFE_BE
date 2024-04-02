@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { Permit } from '~decors/meta/permit.decorator';
@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { Roles } from '~decors/meta/roles.decorator';
 import { RegisterDriverDto } from '@auth/dto/register-driver.dto';
 import { RegisterDriverByUserDto } from '@auth/dto/register-driver-by-user.dto';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -58,7 +59,14 @@ export class AuthController {
   @Permit()
   @Post('login')
   @HttpCode(200)
-  login(@Body() login: LoginDto) {
-    return this.authService.login(login);
+  async login(
+    @Body() login: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const token = await this.authService.login(login);
+    //one day
+    const expires = new Date(Date.now() + 1000 * 60 * 60 * 24);
+    res.cookie('access_token', token, { httpOnly: true, expires });
+    return token;
   }
 }

@@ -11,6 +11,8 @@ import { FindAllDto } from './dto/find-all.dto';
 import { Account } from '~entities/account.entity';
 import { ChangeFindDriverModeDto } from './dto/change-find-driver-mode.dto';
 import { LocationType } from '~entities/location.entity';
+import { NoteRepository } from '~repos/note.repository';
+import { In } from 'typeorm';
 
 @Injectable()
 export class BookingService {
@@ -19,6 +21,7 @@ export class BookingService {
   constructor(
     private bookingRepository: BookingRepository,
     private drivingCostService: DrivingCostService,
+    private noteRepository: NoteRepository,
   ) {}
 
   async create(createBookingDto: CreateBookingDto, userId: number) {
@@ -27,7 +30,7 @@ export class BookingService {
     if (isExistNotCompleted)
       throw new NotCompletedBookingAlreadyExistsException();
 
-    const { distance, pickup, dropOff, stops, note, notes } = createBookingDto;
+    const { distance, pickup, dropOff, stops, note } = createBookingDto;
     const price = this.drivingCostService.calculate(distance, stops.length + 2);
 
     const pickupLocation = { ...pickup, type: LocationType.PICKUP };
@@ -36,14 +39,17 @@ export class BookingService {
       ...stop,
       type: LocationType.STOP,
     }));
-    const locations = [pickupLocation, dropOffLocation, ...stopsLocations];
+    const locations = [pickupLocation, ...stopsLocations, dropOffLocation];
+    const notes = await this.noteRepository.findBy({
+      id: In(createBookingDto.notes),
+    });
     //todo: kiểm tra nếu là chế độ tìm tài xế tự động thì gọi hàm tìm tài xế
     const booking = this.bookingRepository.create({
       price,
       locations,
       userId,
       note,
-      notes: notes.map((noteId) => ({ id: noteId })),
+      notes,
     });
     return this.bookingRepository.save(booking);
   }
@@ -62,12 +68,16 @@ export class BookingService {
 
   async getRecent(userId: number) {
     const results = await this.bookingRepository.findRecentByUserId(userId);
-    if (!results.length) return null;
+    if (!results.length)
+      return {
+        current: null,
+        recent: null,
+      };
+
     const recentBookingIsCompleted =
       results[0].status === BookingStatus.COMPLETED;
     const current = recentBookingIsCompleted ? null : results[0];
     const recent = recentBookingIsCompleted ? results[0] : results[1] ?? null;
-
     return { current, recent };
   }
 
@@ -97,7 +107,16 @@ export class BookingService {
 
   getSuggestDrivers(bookingId: number) {}
 
-  reject(bookingId: number) {}
+  async reject(bookingId: number) {
+    const booking = await this.bookingRepository.findOneBy({
+      id: bookingId,
+      // status: BookingStatus.PENDING,
+    });
+    if (!booking) throw new BookingNotFoundException();
+    booking.status = BookingStatus.REJECTED;
+    await this.bookingRepository.save(booking);
+    return booking.userId;
+  }
 
   getFindDriverMode() {
     return this.autoFindDriver;

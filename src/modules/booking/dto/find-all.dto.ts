@@ -4,6 +4,6 @@ import { Transform } from 'class-transformer';
 
 export class FindAllDto extends PagingAndSortDto {
   @IsOptional()
-  @Transform(({ value }) => value.toLocaleLowerCase())
+  @Transform(({ value }) => value.toUpperCase())
   status: string;
 }

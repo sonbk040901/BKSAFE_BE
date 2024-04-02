@@ -35,5 +35,5 @@ export class CreateBookingDto {
   @IsOptional()
   @IsArray()
   @IsNumber({}, { each: true })
-  notes: number[];
+  notes: number[] = [];
 }

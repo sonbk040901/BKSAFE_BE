@@ -56,8 +56,8 @@ export class Booking extends BaseEntity {
   notes: Note[];
   @ManyToOne(() => Account)
   @JoinColumn({ name: 'user_id' })
-  user: Account;
+  user: Account | null;
   @ManyToOne(() => Account)
   @JoinColumn({ name: 'driver_id' })
-  driver: Account;
+  driver: Account | null;
 }

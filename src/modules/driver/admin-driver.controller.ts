@@ -6,7 +6,7 @@ import { Roles } from '~decors/meta/roles.decorator';
 import { AdminCtrl } from '~decors/controller/controller.decorator';
 
 @AdminCtrl('drivers')
-export class DriverDriverController {
+export class AdminDriverController {
   constructor(private readonly driverService: DriverService) {}
 
   @Post()

@@ -1,7 +1,9 @@
-import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from './baseEntity';
 import { Role } from './role.entity';
 import { Exclude } from 'class-transformer';
+import { Driver } from '~entities/driver.entity';
+import { User } from '~entities/user.entity';
 
 export enum Gender {
   MALE = 'MALE',
@@ -34,4 +36,8 @@ export class Account extends BaseEntity {
   })
   @Exclude()
   roles: Role[];
+  @OneToOne(() => Driver, (driver) => driver.account, { cascade: false })
+  driver?: Driver;
+  @OneToOne(() => User, (user) => user.account, { cascade: false })
+  user?: User;
 }

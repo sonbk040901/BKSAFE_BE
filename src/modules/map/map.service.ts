@@ -29,6 +29,7 @@ export class MapService {
           driver.location,
         );
         driver.location['distance'] = distance;
+        driver.location['id'] = driver.id;
         return distance <= findDriversDto.radius;
       })
       .map((driver) => driver.location);

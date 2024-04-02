@@ -3,7 +3,7 @@ import { Account } from './account.entity';
 import { BaseEntity } from './baseEntity';
 import { License } from './license.entity';
 import { MatchingStatistic } from '~entities/matching-statistic.entity';
-import { Exclude } from 'class-transformer';
+import { Exclude, Transform } from 'class-transformer';
 
 export enum DriverStatus {
   AVAILABLE = 'AVAILABLE',
@@ -21,8 +21,10 @@ export class Location {
   @Column({ nullable: true })
   address: string;
   @Column({ type: 'dec', nullable: true, precision: 25, scale: 20 })
+  @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   longitude: number;
   @Column({ type: 'dec', nullable: true, precision: 25, scale: 20 })
+  @Transform(({ value }) => parseFloat(value), { toPlainOnly: true })
   latitude: number;
 }
 

@@ -3,8 +3,6 @@ import {
   Module,
   ValidationPipe,
 } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from '@auth/auth.module';
 import { DriverModule } from '@driver/driver.module';
 import { MapModule } from '@map/map.module';
@@ -17,6 +15,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { RoleGuard } from '~guards/role.guard';
 import { JwtGuard } from '~guards/jwt.guard';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -24,14 +23,13 @@ import { JwtGuard } from '~guards/jwt.guard';
     ConfigModule.forRoot(),
     TypeOrmModule.forRootAsync(dataSourceOptions),
     ScheduleModule.forRoot(),
+    CacheModule.register({ isGlobal: true }),
     AuthModule,
     DriverModule,
     MapModule,
     BookingModule,
   ],
-  controllers: [AppController],
   providers: [
-    AppService,
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
     { provide: APP_GUARD, useClass: JwtGuard },
     { provide: APP_GUARD, useClass: RoleGuard },

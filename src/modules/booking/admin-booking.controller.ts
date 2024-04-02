@@ -3,10 +3,14 @@ import { Body, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { FindAllDto } from '@booking/dto/find-all.dto';
 import { AdminCtrl } from '~decors/controller/controller.decorator';
 import { ChangeFindDriverModeDto } from '@booking/dto/change-find-driver-mode.dto';
+import { BookingGateway } from '@booking/booking.gateway';
 
 @AdminCtrl('bookings')
 export class AdminBookingController {
-  constructor(private readonly bookingService: BookingService) {}
+  constructor(
+    private readonly bookingService: BookingService,
+    private readonly bookingGateway: BookingGateway,
+  ) {}
 
   @Get()
   findAll(@Query() findAllDto: FindAllDto) {
@@ -18,9 +22,10 @@ export class AdminBookingController {
     return this.bookingService.changeFindDriverMode(changeModeDto);
   }
 
-  @Post(':id/reject')
-  rejectBooking(@Param('id') bookingId: number) {
-    return this.bookingService.reject(bookingId);
+  @Patch(':id/reject')
+  async rejectBooking(@Param('id') bookingId: number) {
+    const userId = await this.bookingService.reject(bookingId);
+    this.bookingGateway.updateBooking(userId, bookingId);
   }
 
   @Get(':id/suggest/drivers')

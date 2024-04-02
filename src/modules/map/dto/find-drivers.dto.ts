@@ -3,7 +3,8 @@ import { Transform } from 'class-transformer';
 
 export class FindDriversDto {
   @IsString()
-  address: string;
+  @IsOptional()
+  address?: string;
   @Transform(({ value }) => parseFloat(value), { toClassOnly: true })
   @IsNumber()
   latitude: number;

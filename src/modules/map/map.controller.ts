@@ -1,7 +1,6 @@
-import { Body, Get, Query } from '@nestjs/common';
+import { Body, Get, Post, Query } from '@nestjs/common';
 import { MapService } from './map.service';
 import { CalculateCostDto } from './dto/calculate-cost.dto';
-import { Permit } from '~decors/meta/permit.decorator';
 import { FindDriversDto } from './dto/find-drivers.dto';
 import { UserCtrl } from '~decors/controller/controller.decorator';
 
@@ -14,9 +13,13 @@ export class MapController {
     return this.mapService.findDrivers(findDriversDto);
   }
 
-  @Permit()
   @Get('cost')
-  getCost(@Body() calculateCostDto: CalculateCostDto) {
+  getCost(@Query() calculateCostDto: CalculateCostDto) {
+    return this.mapService.calculateDrivingCost(calculateCostDto);
+  }
+
+  @Post('cost')
+  getCostPost(@Body() calculateCostDto: CalculateCostDto) {
     return this.mapService.calculateDrivingCost(calculateCostDto);
   }
 }
