@@ -19,14 +19,14 @@ export class BaseGateway<
   constructor(protected authService: T) {}
 
   handleDisconnect(client: Socket) {
-    console.log('disconnected');
+    console.log(`disconnected ${client.nsp.name}`);
     if (client.data.user) {
       client.leave(client.data.user.id.toString());
     }
   }
 
   async handleConnection(client: Socket) {
-    console.log('connected');
+    console.log(`connected ${client.nsp.name}`);
     const authToken = this.extractToken(client);
     client.data.user = await this.authService
       .verify(authToken)

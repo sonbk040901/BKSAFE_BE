@@ -27,7 +27,7 @@ export class RegisterDto {
   })
   password: string;
   @IsOptional()
-  @Matches(/(MALE|FEMALE|OTHER)/)
+  @Matches(/^(MALE|FEMALE|OTHER)$/)
   @Transform(({ value }) => value.toUpperCase())
   gender: Gender;
 }

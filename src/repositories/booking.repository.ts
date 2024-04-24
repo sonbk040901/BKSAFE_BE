@@ -50,10 +50,11 @@ export class BookingRepository extends Repository<Booking> {
   }
 
   findAllByUserId(userId: number, findAllDto: FindAllDto) {
-    return this.find({
+    const status = findAllDto.status;
+    return this.findAndCount({
       where: {
         userId,
-        status: Not(In([BookingStatus.REJECTED, BookingStatus.CANCELLED])),
+        status: typeof status === 'object' ? In(status) : status,
       },
       order: { [findAllDto.sort]: findAllDto.order },
       take: findAllDto.take,
@@ -62,8 +63,12 @@ export class BookingRepository extends Repository<Booking> {
   }
 
   findAllByDriverId(driverId: number, findAllDto: FindAllDto) {
-    return this.find({
-      where: { driverId },
+    const status = findAllDto.status;
+    return this.findAndCount({
+      where: {
+        driverId,
+        status: typeof status === 'object' ? In(status) : status,
+      },
       order: { [findAllDto.sort]: findAllDto.order },
       take: findAllDto.take,
       skip: findAllDto.skip,
@@ -71,9 +76,10 @@ export class BookingRepository extends Repository<Booking> {
   }
 
   findAll(findAllDto: FindAllDto) {
-    return this.find({
+    const status = findAllDto.status;
+    return this.findAndCount({
       where: {
-        status: Not(In([BookingStatus.REJECTED, BookingStatus.CANCELLED])),
+        status: typeof status === 'object' ? In(status) : status,
       },
       order: {
         [findAllDto.sort]: findAllDto.order,
@@ -87,6 +93,15 @@ export class BookingRepository extends Repository<Booking> {
     return this.findOne({
       where: { id: bookingId, userId },
       relations: ['locations', 'notes', 'driver'],
+    });
+  }
+
+  findCurrentByDriverId(driverId: number) {
+    return this.findOne({
+      where: {
+        driverId,
+        status: In([BookingStatus.ACCEPTED, BookingStatus.DRIVING]),
+      },
     });
   }
 }

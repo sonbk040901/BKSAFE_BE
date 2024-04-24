@@ -8,6 +8,7 @@ import {
 import { AuthPayload } from '@auth/interfaces/auth-payload.interface';
 import { AccountRepository } from '~repos/account.repository';
 import { JwtTokenInvalidException } from '~/common/exceptions/httpException';
+import { Account } from '~entities/account.entity';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -22,7 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super(opt);
   }
 
-  async validate(authPayload: AuthPayload): Promise<any> {
+  async validate(authPayload: AuthPayload): Promise<Account> {
     const { id } = authPayload;
     const account = await this.accountRepository.findById(id, ['roles']);
     if (!account) {

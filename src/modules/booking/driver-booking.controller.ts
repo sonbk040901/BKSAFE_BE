@@ -14,6 +14,11 @@ export class DriverBookingController {
     return this.bookingService.driverFindAll(account, findAllDto);
   }
 
+  @Get(':id')
+  findOne(@CurrentAcc() account: Account, @Param('id') id: number) {
+    return this.bookingService.findOneReceive(account, id);
+  }
+
   @Post(':id/accept')
   acceptBooking(@CurrentAcc() account: Account, @Param('id') id: number) {
     return this.bookingService.acceptBooking(account, id);

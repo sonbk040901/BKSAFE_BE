@@ -66,7 +66,10 @@ export class AuthController {
     const token = await this.authService.login(login);
     //one day
     const expires = new Date(Date.now() + 1000 * 60 * 60 * 24);
-    res.cookie('access_token', token, { httpOnly: true, expires });
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      expires,
+    });
     return token;
   }
 }

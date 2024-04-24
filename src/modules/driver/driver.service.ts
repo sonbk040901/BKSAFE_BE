@@ -6,10 +6,14 @@ import { DriverRepository } from '~repos/driver.repository';
 import { DriverNotFoundException } from '~exceptions/httpException';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { DriverStatus } from '~entities/driver.entity';
+import { BookingRepository } from '~repos/booking.repository';
 
 @Injectable()
 export class DriverService {
-  constructor(private driverRepository: DriverRepository) {}
+  constructor(
+    private driverRepository: DriverRepository,
+    private bookingRepository: BookingRepository,
+  ) {}
 
   async create(createDriverDto: CreateDriverDto) {
     const driver = this.driverRepository.create(createDriverDto);
@@ -20,7 +24,7 @@ export class DriverService {
     const driver = await this.driverRepository.findById(id);
     if (!driver) throw new DriverNotFoundException();
     driver.location = location;
-    return await this.driverRepository.save(driver);
+    await this.driverRepository.save(driver);
   }
 
   async updateStatus(id: number, driverStatusDto: UpdateDriverStatusDto) {
@@ -44,5 +48,9 @@ export class DriverService {
 
   remove(id: number) {
     return `This action removes a #${id} driver`;
+  }
+
+  findCurrentByDriverId(id: number) {
+    return this.bookingRepository.findCurrentByDriverId(id);
   }
 }

@@ -31,7 +31,7 @@ export class CreateBookingDto {
   stops: LocationDto[];
   @IsOptional()
   @IsString()
-  note: string;
+  note?: string;
   @IsOptional()
   @IsArray()
   @IsNumber({}, { each: true })

@@ -1,7 +1,8 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateDriverLocationDto {
-  @IsNotEmpty()
+  @IsOptional()
+  @IsString()
   address: string;
   @IsNumber()
   latitude: number;

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { DrivingCostService } from '~utils/driving-cost.service';
 import { BookingRepository } from '~repos/booking.repository';
-import { BookingStatus } from '~entities/booking.entity';
+import { Booking, BookingStatus } from '~entities/booking.entity';
 import {
   BookingNotFoundException,
   NotCompletedBookingAlreadyExistsException,
@@ -13,6 +13,7 @@ import { ChangeFindDriverModeDto } from './dto/change-find-driver-mode.dto';
 import { LocationType } from '~entities/location.entity';
 import { NoteRepository } from '~repos/note.repository';
 import { In } from 'typeorm';
+import { PagingResponseDto } from '~dto/paging-response.dto';
 
 @Injectable()
 export class BookingService {
@@ -54,16 +55,25 @@ export class BookingService {
     return this.bookingRepository.save(booking);
   }
 
-  findAll(findAllDto: FindAllDto) {
-    return this.bookingRepository.findAll(findAllDto);
+  async findAll(findAllDto: FindAllDto) {
+    const [bookings, count] = await this.bookingRepository.findAll(findAllDto);
+    return new PagingResponseDto(bookings, count, findAllDto);
   }
 
-  userFindAll(account: Account, findAllDto: FindAllDto) {
-    return this.bookingRepository.findAllByUserId(account.id, findAllDto);
+  async userFindAll(account: Account, findAllDto: FindAllDto) {
+    const [bookings, count] = await this.bookingRepository.findAllByUserId(
+      account.id,
+      findAllDto,
+    );
+    return new PagingResponseDto(bookings, count, findAllDto);
   }
 
-  driverFindAll(account: Account, findAllDto: FindAllDto) {
-    return this.bookingRepository.findAllByDriverId(account.id, findAllDto);
+  async driverFindAll(account: Account, findAllDto: FindAllDto) {
+    const [bookings, count] = await this.bookingRepository.findAllByDriverId(
+      account.id,
+      findAllDto,
+    );
+    return new PagingResponseDto(bookings, count, findAllDto);
   }
 
   async getRecent(userId: number) {
@@ -127,6 +137,12 @@ export class BookingService {
       bookingId,
       userId,
     );
+    if (!booking) throw new BookingNotFoundException();
+    return booking;
+  }
+
+  findOneReceive(account: Account, id: number) {
+    const booking = this.bookingRepository.findOneBy({ id });
     if (!booking) throw new BookingNotFoundException();
     return booking;
   }
