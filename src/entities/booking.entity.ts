@@ -6,19 +6,31 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { BaseEntity } from './baseEntity';
 import { Account } from './account.entity';
 import { Location } from './location.entity';
 import { Transform } from 'class-transformer';
 import { Note } from '~entities/note.entity';
+import { BookingSuggestDriver } from '~entities/booking-suggest-driver.entity';
 
+/**
+ * * `PENDING`: Chờ xác nhận (đang chờ admin xác nhận)
+ * * `ACCEPTED`: Đã được admin xác nhận, đang tìm tài xế
+ * * `RECEIVED`: Đã có tài xế nhận, đang tới điểm đón
+ * * `DRIVING`: Đang thực hiện chuyến đi
+ * * `REJECTED`: Bị admin từ chối
+ * * `CANCELLED`: Người dùng hủy chuyến
+ * * `COMPLETED`: Hoàn thành chuyến
+ */
 export enum BookingStatus {
   PENDING = 'PENDING',
   ACCEPTED = 'ACCEPTED',
+  RECEIVED = 'RECEIVED',
+  DRIVING = 'DRIVING',
   REJECTED = 'REJECTED',
   CANCELLED = 'CANCELLED',
-  DRIVING = 'DRIVING',
   COMPLETED = 'COMPLETED',
 }
 
@@ -39,8 +51,8 @@ export class Booking extends BaseEntity {
     cascade: ['insert'],
   })
   locations: Location[];
-  @Column({ nullable: true })
-  nextLocationId: number;
+  @Column({ nullable: true, type: 'int' })
+  nextLocationId: number | null;
   @Column({ nullable: true })
   userId: number;
   @Column({ nullable: true })
@@ -60,4 +72,20 @@ export class Booking extends BaseEntity {
   @ManyToOne(() => Account)
   @JoinColumn({ name: 'driver_id' })
   driver: Account | null;
+  @OneToOne(() => BookingSuggestDriver, (target) => target.booking, {
+    cascade: ['insert', 'update'],
+  })
+  bookingSuggestDriver: BookingSuggestDriver;
+
+  get pickupLocation() {
+    return this.locations.find((l) => l.type === 'PICKUP')!;
+  }
+
+  get dropOffLocation() {
+    return this.locations.find((l) => l.type === 'DROP_OFF')!;
+  }
+
+  get stopLocations() {
+    return this.locations.filter((l) => l.type === 'STOP');
+  }
 }

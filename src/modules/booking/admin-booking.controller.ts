@@ -4,6 +4,7 @@ import { FindAllDto } from '@booking/dto/find-all.dto';
 import { AdminCtrl } from '~decors/controller/controller.decorator';
 import { ChangeFindDriverModeDto } from '@booking/dto/change-find-driver-mode.dto';
 import { BookingGateway } from '@booking/booking.gateway';
+import { FindSuggestDriverDto } from '@booking/dto/find-suggest-driver.dto';
 
 @AdminCtrl('bookings')
 export class AdminBookingController {
@@ -15,6 +16,11 @@ export class AdminBookingController {
   @Get()
   findAll(@Query() findAllDto: FindAllDto) {
     return this.bookingService.findAll(findAllDto);
+  }
+
+  @Get('statistic')
+  getStatistic() {
+    return this.bookingService.getStatistic();
   }
 
   @Patch('mode')
@@ -29,15 +35,19 @@ export class AdminBookingController {
   }
 
   @Get(':id/suggest/drivers')
-  getSuggestDrivers(@Param('id') bookingId: number) {
-    return this.bookingService.getSuggestDrivers(bookingId);
+  getSuggestDrivers(
+    @Param('id') bookingId: number,
+    @Query() suggestDriverDto: FindSuggestDriverDto,
+  ) {
+    return this.bookingService.getSuggestDrivers(bookingId, suggestDriverDto);
   }
 
   @Post(':id/suggest/:driverId')
-  suggestDriver(
+  async suggestDriver(
     @Param('id') bookingId: number,
     @Param('driverId') driverId: number,
   ) {
-    return this.bookingService.suggestDriver(bookingId, driverId);
+    await this.bookingService.suggestDriver(bookingId, driverId);
+    this.bookingGateway.suggestDriver(driverId, bookingId);
   }
 }

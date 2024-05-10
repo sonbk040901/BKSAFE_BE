@@ -4,6 +4,7 @@ import { BaseEntity } from './baseEntity';
 import { License } from './license.entity';
 import { MatchingStatistic } from '~entities/matching-statistic.entity';
 import { Exclude, Transform } from 'class-transformer';
+import { BookingSuggestDriver } from '~entities/booking-suggest-driver.entity';
 
 export enum DriverStatus {
   AVAILABLE = 'AVAILABLE',
@@ -38,6 +39,7 @@ export class Driver extends BaseEntity {
   rating: number;
   @OneToOne(() => Account, { cascade: ['insert'] })
   @JoinColumn({ name: 'id' })
+  @Exclude()
   account: Account;
   @Column({ type: 'enum', enum: DriverStatus, default: DriverStatus.OFFLINE })
   status: DriverStatus;
@@ -50,12 +52,16 @@ export class Driver extends BaseEntity {
   @OneToOne(
     () => MatchingStatistic,
     (matchingStatistic) => matchingStatistic.driver,
+    { cascade: ['insert', 'update'] },
   )
   matchingStatistic: MatchingStatistic;
+  @Exclude()
   @Column({
     type: 'enum',
     enum: ActivateStatus,
     default: ActivateStatus.DEACTIVATED,
   })
   activateStatus: ActivateStatus;
+  @OneToOne(() => BookingSuggestDriver, (target) => target.driver)
+  bookingSuggestDriver: BookingSuggestDriver;
 }

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource, In, Not, Raw, Repository } from 'typeorm';
 import { Booking, BookingStatus } from '~entities/booking.entity';
 import { FindAllDto } from '~/modules/booking/dto/find-all.dto';
+import { genFindOperator } from '~repos/utils';
 
 @Injectable()
 export class BookingRepository extends Repository<Booking> {
@@ -43,9 +44,19 @@ export class BookingRepository extends Repository<Booking> {
     });
   }
 
-  findRecentByIdAndUserId(bookingId: number, userId: number) {
+  findOneByIdAndUserIdAndStatus(
+    id: number,
+    userId: number,
+    status: BookingStatus | BookingStatus[],
+    relations?: string[],
+  ) {
     return this.findOne({
-      where: { id: bookingId, userId, status: BookingStatus.PENDING },
+      where: {
+        id,
+        userId,
+        status: genFindOperator(status),
+      },
+      relations,
     });
   }
 
@@ -75,17 +86,18 @@ export class BookingRepository extends Repository<Booking> {
     });
   }
 
-  findAll(findAllDto: FindAllDto) {
+  findAll(findAllDto: FindAllDto, relations?: string[]) {
     const status = findAllDto.status;
     return this.findAndCount({
       where: {
-        status: typeof status === 'object' ? In(status) : status,
+        status: genFindOperator(status),
       },
       order: {
         [findAllDto.sort]: findAllDto.order,
       },
       take: findAllDto.take,
       skip: findAllDto.skip,
+      relations
     });
   }
 
@@ -100,8 +112,49 @@ export class BookingRepository extends Repository<Booking> {
     return this.findOne({
       where: {
         driverId,
-        status: In([BookingStatus.ACCEPTED, BookingStatus.DRIVING]),
+        status: In([BookingStatus.RECEIVED, BookingStatus.DRIVING]),
       },
+      relations: ['locations', 'notes'],
+    });
+  }
+
+  findOneByIdAndDriverId(id: number, driverId: number, relations?: string[]) {
+    return this.findOne({
+      where: {
+        id,
+        driverId,
+      },
+      relations,
+    });
+  }
+
+  findOneByDriverIdAndStatus(
+    driverId: number,
+    status: BookingStatus | BookingStatus[],
+    relations?: string[],
+  ) {
+    return this.findOne({
+      where: {
+        driverId,
+        status: genFindOperator(status),
+      },
+      relations,
+    });
+  }
+
+  findOneByIdAndDriverIdAndStatus(
+    id: number,
+    driverId: number,
+    status: BookingStatus | BookingStatus[],
+    relations?: string[],
+  ) {
+    return this.findOne({
+      where: {
+        id,
+        driverId,
+        status: genFindOperator(status),
+      },
+      relations,
     });
   }
 }

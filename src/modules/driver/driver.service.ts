@@ -7,10 +7,13 @@ import { DriverNotFoundException } from '~exceptions/httpException';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { DriverStatus } from '~entities/driver.entity';
 import { BookingRepository } from '~repos/booking.repository';
+import { DistanceService } from '~utils/distance.service';
+import { Booking } from '~entities/booking.entity';
 
 @Injectable()
 export class DriverService {
   constructor(
+    private distanceService: DistanceService,
     private driverRepository: DriverRepository,
     private bookingRepository: BookingRepository,
   ) {}
@@ -25,6 +28,34 @@ export class DriverService {
     if (!driver) throw new DriverNotFoundException();
     driver.location = location;
     await this.driverRepository.save(driver);
+    // Lấy ra booking hiện tại của driver
+    const booking = await this.bookingRepository.findCurrentByDriverId(id);
+    if (!booking) return null;
+    return this.updateNextLocation(booking, location);
+  }
+
+  /**
+   * Thay đổi trạng thái booking khi tài xế đến điểm đến
+   * * Nếu chưa đến điểm cuối cùng thì cập nhật nextLocationId
+   * (để driver có thể xác nhận hoàn thành chuyến đi nếu đã đến điểm cuối)
+   * @param booking
+   * @param location
+   * @private
+   */
+  private updateNextLocation(
+    booking: Booking,
+    location: UpdateDriverLocationDto,
+  ) {
+    const locations = booking.locations;
+    // Tìm điểm đến gần nhất với vị trí hiện tại của driver (r < 100m) -> để cập nhật nextLocationId
+    const index = locations.findIndex((l) => {
+      const distance = this.distanceService.calculate(l, location);
+      return distance < 100;
+    });
+    if (index === -1 || index === 0) return null;
+    if (index !== locations.length - 1)
+      booking.nextLocationId = locations[index + 1].id;
+    return this.bookingRepository.save(booking);
   }
 
   async updateStatus(id: number, driverStatusDto: UpdateDriverStatusDto) {
@@ -48,9 +79,5 @@ export class DriverService {
 
   remove(id: number) {
     return `This action removes a #${id} driver`;
-  }
-
-  findCurrentByDriverId(id: number) {
-    return this.bookingRepository.findCurrentByDriverId(id);
   }
 }

@@ -12,9 +12,12 @@ export class DriverRepository extends Repository<Driver> {
     );
   }
 
-  findAllAvailableDrivers() {
-    return this.findBy({
-      status: DriverStatus.AVAILABLE,
+  findAllAvailableDrivers(relations?: string[]) {
+    return this.find({
+      where: {
+        // status: DriverStatus.AVAILABLE,
+      },
+      relations,
     });
   }
 

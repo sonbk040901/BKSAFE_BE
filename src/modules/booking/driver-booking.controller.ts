@@ -1,31 +1,65 @@
 import { BookingService } from './booking.service';
-import { Get, Param, Post, Query } from '@nestjs/common';
+import { Get, Param, Patch, Query } from '@nestjs/common';
 import { CurrentAcc } from '~decors/param/current-account.decorator';
 import { Account } from '~entities/account.entity';
 import { FindAllDto } from '@booking/dto/find-all.dto';
 import { DriverCtrl } from '~decors/controller/controller.decorator';
+import { BookingGateway } from '@booking/booking.gateway';
 
 @DriverCtrl('bookings')
 export class DriverBookingController {
-  constructor(private readonly bookingService: BookingService) {}
+  constructor(
+    private bookingService: BookingService,
+    private bookingGateway: BookingGateway,
+  ) {}
 
   @Get()
   findAll(@CurrentAcc() account: Account, @Query() findAllDto: FindAllDto) {
     return this.bookingService.driverFindAll(account, findAllDto);
   }
 
+  @Get('current')
+  findCurrent(@CurrentAcc() account: Account) {
+    return this.bookingService.driverFindCurrent(account);
+  }
+
+  @Get('receive')
+  findOneReceive(@CurrentAcc() account: Account) {
+    return this.bookingService.driverFindOneReceive(account);
+  }
+
   @Get(':id')
   findOne(@CurrentAcc() account: Account, @Param('id') id: number) {
-    return this.bookingService.findOneReceive(account, id);
+    return this.bookingService.driverFindOne(account, id);
   }
 
-  @Post(':id/accept')
-  acceptBooking(@CurrentAcc() account: Account, @Param('id') id: number) {
-    return this.bookingService.acceptBooking(account, id);
+  @Patch(':id/accept')
+  async acceptBooking(@CurrentAcc() account: Account, @Param('id') id: number) {
+    const booking = await this.bookingService.acceptBooking(account, id);
+    this.bookingGateway.updateBooking(booking.userId, booking.id);
+    return booking;
   }
 
-  @Post(':id/reject')
-  rejectBooking(@CurrentAcc() account: Account, @Param('id') id: number) {
-    return this.bookingService.rejectBooking(account, id);
+  @Patch(':id/reject')
+  async rejectBooking(@CurrentAcc() account: Account, @Param('id') id: number) {
+    await this.bookingService.rejectBooking(account, id);
+    this.bookingGateway.newPendingBooking(id);
+  }
+
+  @Patch(':id/start')
+  async startBooking(@CurrentAcc() account: Account, @Param('id') id: number) {
+    const booking = await this.bookingService.startBooking(account, id);
+    this.bookingGateway.updateBooking(booking.userId, booking.id);
+    return booking;
+  }
+
+  @Patch(':id/complete')
+  async completeBooking(
+    @CurrentAcc() account: Account,
+    @Param('id') id: number,
+  ) {
+    const booking = await this.bookingService.completeBooking(account, id);
+    this.bookingGateway.updateBooking(booking.userId, booking.id);
+    return booking;
   }
 }

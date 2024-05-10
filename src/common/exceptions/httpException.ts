@@ -42,13 +42,13 @@ export class NotCompletedBookingAlreadyExistsException extends ConflictException
 
 export class BookingNotFoundException extends NotFoundException {
   constructor() {
-    super('Booking not found!');
+    super('Booking not found 🧐!');
   }
 }
 
 export class DriverNotFoundException extends NotFoundException {
   constructor() {
-    super('Driver not found!');
+    super('Driver not found 🧐!');
   }
 }
 

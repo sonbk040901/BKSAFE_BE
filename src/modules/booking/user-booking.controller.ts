@@ -29,6 +29,7 @@ export class UserBookingController {
   ) {
     const booking = await this.bookingService.create(createBookingDto, userId);
     this.bookingGateway.updateBooking(userId, booking.id);
+    this.bookingGateway.newPendingBooking(booking.id);
     return booking;
   }
 

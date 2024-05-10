@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { DrivingCostService } from '~utils/driving-cost.service';
 import { BookingRepository } from '~repos/booking.repository';
-import { Booking, BookingStatus } from '~entities/booking.entity';
+import { BookingStatus } from '~entities/booking.entity';
 import {
   BookingNotFoundException,
   NotCompletedBookingAlreadyExistsException,
@@ -12,17 +12,30 @@ import { Account } from '~entities/account.entity';
 import { ChangeFindDriverModeDto } from './dto/change-find-driver-mode.dto';
 import { LocationType } from '~entities/location.entity';
 import { NoteRepository } from '~repos/note.repository';
-import { In } from 'typeorm';
 import { PagingResponseDto } from '~dto/paging-response.dto';
+import { BookingSuggestDriverRepository } from '~repos/booking-suggest-driver.repository';
+import { FindSuggestDriverDto } from '@booking/dto/find-suggest-driver.dto';
+import { DriverPriorityService } from '~utils/driver-priority.service';
+import { DriverRepository } from '~repos/driver.repository';
+import { DistanceService } from '~utils/distance.service';
+import { Driver } from '~entities/driver.entity';
+import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
+import { MatchingStatistic } from '~entities/matching-statistic.entity';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class BookingService {
   private autoFindDriver: boolean = true;
 
   constructor(
-    private bookingRepository: BookingRepository,
     private drivingCostService: DrivingCostService,
+    private driverPriorityService: DriverPriorityService,
+    private distanceService: DistanceService,
+    private bookingRepository: BookingRepository,
     private noteRepository: NoteRepository,
+    private bSDRepository: BookingSuggestDriverRepository,
+    private driverRepository: DriverRepository,
+    private statisticRepository: MatchingStatisticRepository,
   ) {}
 
   async create(createBookingDto: CreateBookingDto, userId: number) {
@@ -41,9 +54,7 @@ export class BookingService {
       type: LocationType.STOP,
     }));
     const locations = [pickupLocation, ...stopsLocations, dropOffLocation];
-    const notes = await this.noteRepository.findBy({
-      id: In(createBookingDto.notes),
-    });
+    const notes = await this.noteRepository.findById(createBookingDto.notes);
     //todo: kiểm tra nếu là chế độ tìm tài xế tự động thì gọi hàm tìm tài xế
     const booking = this.bookingRepository.create({
       price,
@@ -56,7 +67,11 @@ export class BookingService {
   }
 
   async findAll(findAllDto: FindAllDto) {
-    const [bookings, count] = await this.bookingRepository.findAll(findAllDto);
+    const [bookings, count] = await this.bookingRepository.findAll(findAllDto, [
+      'locations',
+      'user',
+      'driver',
+    ]);
     return new PagingResponseDto(bookings, count, findAllDto);
   }
 
@@ -91,10 +106,11 @@ export class BookingService {
     return { current, recent };
   }
 
-  async cancel(userId: number, bookingId: number) {
-    const booking = await this.bookingRepository.findRecentByIdAndUserId(
-      bookingId,
+  async cancel(userId: number, id: number) {
+    const booking = await this.bookingRepository.findOneByIdAndUserIdAndStatus(
+      id,
       userId,
+      BookingStatus.PENDING,
     );
     if (!booking) throw new BookingNotFoundException();
     booking.status = BookingStatus.CANCELLED;
@@ -109,18 +125,97 @@ export class BookingService {
     return this.autoFindDriver;
   }
 
-  acceptBooking(account: Account, id: number) {}
+  async acceptBooking(account: Account, id: number) {
+    const bsd = await this.bSDRepository.findOne({
+      where: { bookingId: id, driverId: account.id },
+      relations: ['booking', 'booking.locations'],
+    });
+    if (!bsd) throw new BookingNotFoundException();
+    const booking = bsd.booking;
+    await this.bSDRepository.delete({ bookingId: id, driverId: account.id });
+    booking.status = BookingStatus.RECEIVED;
+    booking.driverId = account.id;
+    booking.nextLocationId = bsd.booking.pickupLocation.id;
+    await this.updateMatchingStatistic(account.id, [
+      { increase: true, field: 'accept' },
+    ]);
+    return this.bookingRepository.save(booking);
+  }
 
-  rejectBooking(account: Account, id: number) {}
+  async rejectBooking(account: Account, id: number) {
+    const bsd = await this.bSDRepository.findOne({
+      where: { bookingId: id, driverId: account.id },
+    });
+    if (!bsd) throw new BookingNotFoundException();
+    await this.updateMatchingStatistic(account.id, [
+      { increase: true, field: 'reject' },
+    ]);
+    await this.bSDRepository.delete({ bookingId: id, driverId: account.id });
+  }
 
-  suggestDriver(bookingId: number, driverId: number) {}
+  async suggestDriver(bookingId: number, driverId: number) {
+    const bsd = this.bSDRepository.create({
+      bookingId,
+      driverId,
+    });
+    await this.bSDRepository.save(bsd);
+    await this.bookingRepository.update(bookingId, {
+      status: BookingStatus.ACCEPTED,
+    });
+    await this.updateMatchingStatistic(driverId, [
+      { increase: true, field: 'total' },
+    ]);
+  }
 
-  getSuggestDrivers(bookingId: number) {}
+  async getSuggestDrivers(
+    bookingId: number,
+    suggestDriverDto: FindSuggestDriverDto,
+  ) {
+    const booking = await this.bookingRepository.findOne({
+      where: { id: bookingId },
+      relations: ['locations'],
+    });
+    if (!booking) throw new BookingNotFoundException();
+    const pickup = booking.locations.find(
+      (location) => location.type === LocationType.PICKUP,
+    );
+    const results = await this.driverRepository.findAllAvailableDrivers([
+      'matchingStatistic',
+      'account',
+    ]);
+
+    const suggestDrivers: Driver[] = [];
+    results.forEach((driver) => {
+      const distance = this.distanceService.calculate(pickup!, driver.location);
+      if (distance > 2500) return;
+      const matchingStatistic = driver.matchingStatistic;
+      const options = {
+        distance,
+        rating: driver.rating,
+        matchCount: matchingStatistic?.total ?? 0,
+        rejectCount: matchingStatistic?.reject ?? 0,
+        successCount: matchingStatistic?.success ?? 0,
+        acceptCount: matchingStatistic?.accept ?? 0,
+      };
+      driver['priority'] = this.driverPriorityService.calculate(options);
+      const account = instanceToPlain(driver.account);
+      Object.assign(driver, options);
+      Object.assign(driver, account);
+      suggestDrivers.push(driver);
+    });
+    const data = suggestDrivers
+      .sort((d1, d2) => d2['priority'] - d1['priority'])
+      .slice(
+        suggestDriverDto.skip,
+        suggestDriverDto.skip + suggestDriverDto.take,
+      );
+    return new PagingResponseDto(data, suggestDrivers.length, suggestDriverDto);
+  }
 
   async reject(bookingId: number) {
     const booking = await this.bookingRepository.findOneBy({
       id: bookingId,
-      // status: BookingStatus.PENDING,
+      status: BookingStatus.PENDING,
     });
     if (!booking) throw new BookingNotFoundException();
     booking.status = BookingStatus.REJECTED;
@@ -141,9 +236,91 @@ export class BookingService {
     return booking;
   }
 
-  findOneReceive(account: Account, id: number) {
-    const booking = this.bookingRepository.findOneBy({ id });
+  async findOneReceive(account: Account, id: number) {
+    const bsd = await this.bSDRepository.findOne({
+      where: { bookingId: id, driverId: account.id },
+      relations: ['booking', 'booking.locations'],
+    });
+    if (!bsd) throw new BookingNotFoundException();
+    return bsd.booking;
+  }
+
+  async completeBooking(account: Account, id: number) {
+    const booking =
+      await this.bookingRepository.findOneByIdAndDriverIdAndStatus(
+        id,
+        account.id,
+        BookingStatus.DRIVING,
+      );
+    if (!booking) throw new BookingNotFoundException();
+    booking.status = BookingStatus.COMPLETED;
+    await this.updateMatchingStatistic(account.id, [
+      { increase: true, field: 'success' },
+    ]);
+    return this.bookingRepository.save(booking);
+  }
+
+  async driverFindOneReceive(account: Account) {
+    const bsd = await this.bSDRepository.findOneByDriverId(account.id);
+    if (!bsd) throw new BookingNotFoundException();
+    return bsd.booking;
+  }
+
+  async driverFindCurrent(account: Account) {
+    const booking = await this.bookingRepository.findCurrentByDriverId(
+      account.id,
+    );
     if (!booking) throw new BookingNotFoundException();
     return booking;
+  }
+
+  driverFindOne(account: Account, id: number) {
+    return this.bookingRepository.findOneByIdAndDriverId(id, account.id);
+  }
+
+  async startBooking(account: Account, id: number) {
+    const booking =
+      await this.bookingRepository.findOneByIdAndDriverIdAndStatus(
+        id,
+        account.id,
+        BookingStatus.RECEIVED,
+      );
+    if (!booking) throw new BookingNotFoundException();
+    booking.status = BookingStatus.DRIVING;
+    return this.bookingRepository.save(booking);
+  }
+
+  private async updateMatchingStatistic(
+    driverId: number,
+    actions: {
+      increase?: boolean;
+      field: Exclude<keyof MatchingStatistic, 'driver' | 'id'>;
+    }[],
+  ) {
+    const driver = await this.driverRepository.findOne({
+      where: { id: driverId },
+      relations: ['matchingStatistic'],
+    });
+    if (!driver) return;
+    const statistic =
+      driver.matchingStatistic ?? this.statisticRepository.create();
+    actions.forEach((action) => {
+      if (action.increase)
+        statistic[action.field] = (statistic[action.field] ?? 0) + 1;
+      else statistic[action.field] = (statistic[action.field] ?? 1) - 1;
+    });
+    driver.matchingStatistic = statistic;
+    await this.driverRepository.save(driver);
+  }
+
+  async getStatistic() {
+    const result: { status: string; count: string }[] =
+      await this.bookingRepository.query(
+        'select status, count(status) count from bookings group by status',
+      );
+    return result.reduce((acc, { status, count }) => {
+      acc[status] = +count;
+      return acc;
+    }, {});
   }
 }

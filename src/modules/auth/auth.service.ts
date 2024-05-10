@@ -19,6 +19,7 @@ import { ActivateStatus } from '~entities/driver.entity';
 import { UserRepository } from '~repos/user.repository';
 import { Account } from '~entities/account.entity';
 import { RegisterDriverByUserDto } from '@auth/dto/register-driver-by-user.dto';
+import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
 
 @Injectable()
 export class AuthService {
@@ -27,13 +28,14 @@ export class AuthService {
     private driverRepository: DriverRepository,
     private userRepository: UserRepository,
     private roleRepository: RoleRepository,
+    private statisticRepository: MatchingStatisticRepository,
     private jwtService: JwtService,
     private bcryptService: BcryptService,
   ) {}
 
   async verify(token: string) {
     const { id } = this.jwtService.verify<AuthPayload>(token);
-    const user = await this.accountRepository.findOneBy({ id });
+    const user = await this.accountRepository.findById(id, ['roles']);
     if (!user) throw new EmailOrPasswordIncorrectException();
     return user;
   }
@@ -89,6 +91,8 @@ export class AuthService {
     //todo: gửi mã xác nhận qua email
     const isExist = await this.accountRepository.findOneByEmail(register.email);
     if (isExist) throw new EmailAlreadyExistsException(register.email);
+    //Tạo thông tin thống kê cho tài xế
+    const statistic = this.statisticRepository.create();
 
     const driverRole = await this.roleRepository.getDriverRole();
     register.password = await this.bcryptService.hash(register.password);
@@ -98,6 +102,7 @@ export class AuthService {
       : (account.roles = [driverRole]);
     const driver = this.driverRepository.create(register);
     driver.account = account;
+    driver.matchingStatistic = statistic;
     await this.driverRepository.save(driver);
     return account;
   }
@@ -120,12 +125,15 @@ export class AuthService {
       existedDriver.activateStatus = ActivateStatus.DEACTIVATED;
       return await this.driverRepository.save(existedDriver);
     }
+    //Tạo thông tin thống kê cho tài xế
+    const statistic = this.statisticRepository.create();
 
     const driverRole = await this.roleRepository.getDriverRole();
 
     const driver = this.driverRepository.create(register);
     account.roles.push(driverRole);
     driver.account = account;
+    driver.matchingStatistic = statistic;
     return await this.driverRepository.save(driver);
   }
 }

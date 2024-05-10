@@ -26,13 +26,11 @@ export class DriverGateway extends BaseGateway<AuthService> {
     @MessageBody() payload: UpdateDriverLocationDto,
   ) {
     const driver: Account = client.data.user;
-    await this.driverService.updateLocation(driver.id, payload);
-    this.driverService.findCurrentByDriverId(driver.id).then((booking) => {
-      if (!booking) return;
-      this.server
-        .of('booking')
-        .to(booking.userId.toString())
-        .emit('update-location', payload);
-    });
+    const booking = await this.driverService.updateLocation(driver.id, payload);
+    if (!booking) return;
+    this.server
+      .of('booking')
+      .to([booking.userId.toString(), booking.driverId.toString()])
+      .emit('update-location', booking);
   }
 }

@@ -5,6 +5,8 @@ import { DriverRepository } from './driver.repository';
 import { BookingRepository } from './booking.repository';
 import { UserRepository } from '~repos/user.repository';
 import { NoteRepository } from '~repos/note.repository';
+import { BookingSuggestDriverRepository } from '~repos/booking-suggest-driver.repository';
+import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
 
 @Global()
 @Module({
@@ -17,6 +19,8 @@ import { NoteRepository } from '~repos/note.repository';
     BookingRepository,
     UserRepository,
     NoteRepository,
+    BookingSuggestDriverRepository,
+    MatchingStatisticRepository,
   ],
   exports: [
     AccountRepository,
@@ -25,6 +29,8 @@ import { NoteRepository } from '~repos/note.repository';
     BookingRepository,
     UserRepository,
     NoteRepository,
+    BookingSuggestDriverRepository,
+    MatchingStatisticRepository,
   ],
 })
 export class RepositoriesModule {}

@@ -31,7 +31,10 @@ export class BaseGateway<
     client.data.user = await this.authService
       .verify(authToken)
       .then((user) => {
-        client.join(user.id.toString());
+        const isAdmin = user.roles.find((role) => role.name === 'admin');
+        if (isAdmin) {
+          client.join('admin');
+        } else client.join(user.id.toString());
         return user;
       })
       .catch(() => client.disconnect());

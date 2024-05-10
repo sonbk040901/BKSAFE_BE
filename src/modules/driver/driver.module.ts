@@ -5,9 +5,10 @@ import { UserDriverController } from '@driver/user-driver.controller';
 import { AdminDriverController } from '@driver/admin-driver.controller';
 import { DriverGateway } from './driver.gateway';
 import { AuthModule } from '@auth/auth.module';
+import { UtilsModule } from '~utils/utils.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, UtilsModule],
   controllers: [
     AdminDriverController,
     DriverDriverController,

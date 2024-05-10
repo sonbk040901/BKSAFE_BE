@@ -18,6 +18,9 @@ export class MatchingStatistic {
   // Số chuyến đi thành công
   @Column({ type: 'int', default: 0 })
   success: number;
+  // Số chuyến đi tài xế chấp nhận
+  @Column({ type: 'int', default: 0 })
+  accept: number;
   // Số chuyến đi thất bại
   @Column({ type: 'int', default: 0 })
   fail: number;
@@ -26,7 +29,7 @@ export class MatchingStatistic {
   reject: number;
   @OneToOne(() => Driver, {
     cascade: false,
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'driver_id' })
   driver: Driver;
