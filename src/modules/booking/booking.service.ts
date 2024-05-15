@@ -22,10 +22,11 @@ import { Driver } from '~entities/driver.entity';
 import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
 import { MatchingStatistic } from '~entities/matching-statistic.entity';
 import { instanceToPlain } from 'class-transformer';
+import { ILocation } from '~interfaces/location.interface';
 
 @Injectable()
 export class BookingService {
-  private autoFindDriver: boolean = true;
+  private autoFindDriver: boolean = false;
 
   constructor(
     private drivingCostService: DrivingCostService,
@@ -55,7 +56,6 @@ export class BookingService {
     }));
     const locations = [pickupLocation, ...stopsLocations, dropOffLocation];
     const notes = await this.noteRepository.findById(createBookingDto.notes);
-    //todo: kiểm tra nếu là chế độ tìm tài xế tự động thì gọi hàm tìm tài xế
     const booking = this.bookingRepository.create({
       price,
       locations,
@@ -63,7 +63,19 @@ export class BookingService {
       note,
       notes,
     });
-    return this.bookingRepository.save(booking);
+    if (!this.autoFindDriver) return this.bookingRepository.save(booking);
+    const suggestDrivers = await this.getSuggestDriversByLocation(pickup);
+    if (!suggestDrivers.length) return this.bookingRepository.save(booking);
+    const driver = suggestDrivers[0];
+    booking.status = BookingStatus.ACCEPTED;
+    const bsd = this.bSDRepository.create({
+      booking,
+      driverId: driver.id,
+    });
+    await this.updateMatchingStatistic(driver.id, [
+      { increase: true, field: 'total' },
+    ]);
+    return this.bSDRepository.save(bsd);
   }
 
   async findAll(findAllDto: FindAllDto) {
@@ -118,10 +130,7 @@ export class BookingService {
   }
 
   changeFindDriverMode(changeModeDto: ChangeFindDriverModeDto) {
-    let mode: boolean;
-    if (changeModeDto.auto === undefined) mode = !this.autoFindDriver;
-    else mode = changeModeDto.auto;
-    this.autoFindDriver = mode;
+    this.autoFindDriver = changeModeDto.auto ?? !this.autoFindDriver;
     return this.autoFindDriver;
   }
 
@@ -176,9 +185,16 @@ export class BookingService {
       relations: ['locations'],
     });
     if (!booking) throw new BookingNotFoundException();
-    const pickup = booking.locations.find(
-      (location) => location.type === LocationType.PICKUP,
+    const pickup = booking.pickupLocation;
+    const suggestDrivers = await this.getSuggestDriversByLocation(pickup);
+    const data = suggestDrivers.slice(
+      suggestDriverDto.skip,
+      suggestDriverDto.skip + suggestDriverDto.take,
     );
+    return new PagingResponseDto(data, suggestDrivers.length, suggestDriverDto);
+  }
+
+  private async getSuggestDriversByLocation(pickup: ILocation) {
     const results = await this.driverRepository.findAllAvailableDrivers([
       'matchingStatistic',
       'account',
@@ -186,7 +202,7 @@ export class BookingService {
 
     const suggestDrivers: Driver[] = [];
     results.forEach((driver) => {
-      const distance = this.distanceService.calculate(pickup!, driver.location);
+      const distance = this.distanceService.calculate(pickup, driver.location);
       if (distance > 2500) return;
       const matchingStatistic = driver.matchingStatistic;
       const options = {
@@ -203,13 +219,7 @@ export class BookingService {
       Object.assign(driver, account);
       suggestDrivers.push(driver);
     });
-    const data = suggestDrivers
-      .sort((d1, d2) => d2['priority'] - d1['priority'])
-      .slice(
-        suggestDriverDto.skip,
-        suggestDriverDto.skip + suggestDriverDto.take,
-      );
-    return new PagingResponseDto(data, suggestDrivers.length, suggestDriverDto);
+    return suggestDrivers.sort((d1, d2) => d2['priority'] - d1['priority']);
   }
 
   async reject(bookingId: number) {

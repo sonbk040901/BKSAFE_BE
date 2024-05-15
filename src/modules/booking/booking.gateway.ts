@@ -47,4 +47,12 @@ export class BookingGateway extends BaseGateway<AuthService> {
   newPendingBooking(bookingId: number) {
     this.server.to('admin').emit('new-pending', bookingId);
   }
+
+  /**
+   * Gửi thông báo đến `admin` về việc có một booking đã được tự động chấp nhận
+   * @param bookingId
+   */
+  newAcceptedBooking(bookingId: number) {
+    this.server.to('admin').emit('new-accepted', bookingId);
+  }
 }

@@ -8,7 +8,7 @@ export class BookingSuggestDriver {
   bookingId: number;
   @PrimaryColumn()
   driverId: number;
-  @OneToOne(() => Booking)
+  @OneToOne(() => Booking, { cascade: ['insert'] })
   @JoinColumn({ name: 'booking_id' })
   booking: Booking;
   @OneToOne(() => Driver)
