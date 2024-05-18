@@ -3,7 +3,7 @@ import {
   OnGatewayDisconnect,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server, Socket, Namespace } from 'socket.io';
 import { Account } from '~entities/account.entity';
 import { UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from '~guards/ws-jwt.guard';
@@ -14,7 +14,7 @@ export class BaseGateway<
   >
   implements OnGatewayConnection<Socket>, OnGatewayDisconnect<Socket>
 {
-  @WebSocketServer() server: Server;
+  @WebSocketServer() server: Namespace;
 
   constructor(protected authService: T) {}
 
@@ -33,6 +33,7 @@ export class BaseGateway<
       .then((user) => {
         const isAdmin = user.roles.find((role) => role.name === 'admin');
         if (isAdmin) {
+          console.log('admin join');
           client.join('admin');
         } else client.join(user.id.toString());
         return user;

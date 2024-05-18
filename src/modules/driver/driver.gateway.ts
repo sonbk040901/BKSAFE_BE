@@ -28,9 +28,9 @@ export class DriverGateway extends BaseGateway<AuthService> {
     const driver: Account = client.data.user;
     const booking = await this.driverService.updateLocation(driver.id, payload);
     if (!booking) return;
-    this.server
+    this.server.server
       .of('booking')
-      .to([booking.userId.toString(), booking.driverId.toString()])
-      .emit('update-location', booking);
+      .to(booking.userId.toString())
+      .emit('current', booking.id);
   }
 }

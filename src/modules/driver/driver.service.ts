@@ -50,9 +50,9 @@ export class DriverService {
     // Tìm điểm đến gần nhất với vị trí hiện tại của driver (r < 100m) -> để cập nhật nextLocationId
     const index = locations.findIndex((l) => {
       const distance = this.distanceService.calculate(l, location);
-      return distance < 100;
+      return distance < 200;
     });
-    if (index === -1 || index === 0) return null;
+    if (index === -1 || index === 0) return booking;
     if (index !== locations.length - 1)
       booking.nextLocationId = locations[index + 1].id;
     return this.bookingRepository.save(booking);

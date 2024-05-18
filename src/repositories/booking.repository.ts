@@ -114,7 +114,7 @@ export class BookingRepository extends Repository<Booking> {
         driverId,
         status: In([BookingStatus.RECEIVED, BookingStatus.DRIVING]),
       },
-      relations: ['locations', 'notes'],
+      relations: ['locations', 'notes', 'user'],
     });
   }
 

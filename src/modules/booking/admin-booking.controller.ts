@@ -23,6 +23,11 @@ export class AdminBookingController {
     return this.bookingService.getStatistic();
   }
 
+  @Get('mode')
+  getFindDriverMode() {
+    return this.bookingService.getFindDriverMode();
+  }
+
   @Patch('mode')
   changeFindDriverMode(@Body() changeModeDto: ChangeFindDriverModeDto) {
     return this.bookingService.changeFindDriverMode(changeModeDto);
@@ -47,7 +52,11 @@ export class AdminBookingController {
     @Param('id') bookingId: number,
     @Param('driverId') driverId: number,
   ) {
-    await this.bookingService.suggestDriver(bookingId, driverId);
+    const booking = await this.bookingService.suggestDriver(
+      bookingId,
+      driverId,
+    );
     this.bookingGateway.suggestDriver(driverId, bookingId);
+    this.bookingGateway.updateBooking(booking.userId, bookingId);
   }
 }

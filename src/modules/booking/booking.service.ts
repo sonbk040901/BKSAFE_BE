@@ -122,7 +122,7 @@ export class BookingService {
     const booking = await this.bookingRepository.findOneByIdAndUserIdAndStatus(
       id,
       userId,
-      BookingStatus.PENDING,
+      [BookingStatus.PENDING],
     );
     if (!booking) throw new BookingNotFoundException();
     booking.status = BookingStatus.CANCELLED;
@@ -163,17 +163,22 @@ export class BookingService {
   }
 
   async suggestDriver(bookingId: number, driverId: number) {
+    const booking = await this.bookingRepository.findOneByOrFail({
+      id: bookingId,
+    });
+    booking.status = BookingStatus.ACCEPTED;
     const bsd = this.bSDRepository.create({
-      bookingId,
+      booking,
       driverId,
     });
-    await this.bSDRepository.save(bsd);
-    await this.bookingRepository.update(bookingId, {
-      status: BookingStatus.ACCEPTED,
-    });
+    // await this.bookingRepository.update(bookingId, {
+    //   status: BookingStatus.ACCEPTED,
+    // });
     await this.updateMatchingStatistic(driverId, [
       { increase: true, field: 'total' },
     ]);
+    await this.bSDRepository.save(bsd);
+    return booking;
   }
 
   async getSuggestDrivers(
@@ -202,6 +207,8 @@ export class BookingService {
 
     const suggestDrivers: Driver[] = [];
     results.forEach((driver) => {
+      console.log('distance', driver);
+      
       const distance = this.distanceService.calculate(pickup, driver.location);
       if (distance > 2500) return;
       const matchingStatistic = driver.matchingStatistic;
@@ -294,9 +301,11 @@ export class BookingService {
         id,
         account.id,
         BookingStatus.RECEIVED,
+        ['locations'],
       );
     if (!booking) throw new BookingNotFoundException();
     booking.status = BookingStatus.DRIVING;
+    booking.nextLocationId = booking.locations[1].id;
     return this.bookingRepository.save(booking);
   }
 
