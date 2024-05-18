@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
+import { FindAllDto } from '~/modules/driver/dto/find-all.dto';
 import { Driver, DriverStatus } from '~entities/driver.entity';
 
 @Injectable()
@@ -10,6 +11,18 @@ export class DriverRepository extends Repository<Driver> {
       dataSource.createEntityManager(),
       dataSource.createQueryRunner(),
     );
+  }
+
+  findAll(findAllDto: FindAllDto, relations?: string[]) {
+    return this.findAndCount({
+      where: {},
+      order: {
+        [findAllDto.sort]: findAllDto.order,
+      },
+      take: findAllDto.take,
+      skip: findAllDto.skip,
+      relations,
+    });
   }
 
   findAllAvailableDrivers(relations?: string[]) {

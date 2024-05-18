@@ -1,9 +1,9 @@
-import { Body, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { AdminCtrl } from '~decors/controller/controller.decorator';
 import { DriverService } from './driver.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
-import { Roles } from '~decors/meta/roles.decorator';
-import { AdminCtrl } from '~decors/controller/controller.decorator';
+import { FindAllDto } from './dto/find-all.dto';
 
 @AdminCtrl('drivers')
 export class AdminDriverController {
@@ -16,9 +16,8 @@ export class AdminDriverController {
   }
 
   @Get()
-  @Roles('admin')
-  findAll() {
-    return this.driverService.findAll();
+  findAll(@Query() findAllDto: FindAllDto) {
+    return this.driverService.findAll(findAllDto);
   }
 
   @Get(':id')

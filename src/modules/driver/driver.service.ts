@@ -1,14 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { CreateDriverDto } from './dto/create-driver.dto';
-import { UpdateDriverDto } from './dto/update-driver.dto';
-import { UpdateDriverLocationDto } from './dto/update-driver-location.dto';
-import { DriverRepository } from '~repos/driver.repository';
-import { DriverNotFoundException } from '~exceptions/httpException';
-import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
-import { DriverStatus } from '~entities/driver.entity';
-import { BookingRepository } from '~repos/booking.repository';
-import { DistanceService } from '~utils/distance.service';
+import { instanceToPlain } from 'class-transformer';
+import { PagingResponseDto } from '~/common/dto/paging-response.dto';
 import { Booking } from '~entities/booking.entity';
+import { DriverStatus } from '~entities/driver.entity';
+import { DriverNotFoundException } from '~exceptions/httpException';
+import { BookingRepository } from '~repos/booking.repository';
+import { DriverRepository } from '~repos/driver.repository';
+import { DistanceService } from '~utils/distance.service';
+import { CreateDriverDto } from './dto/create-driver.dto';
+import { FindAllDto } from './dto/find-all.dto';
+import { UpdateDriverLocationDto } from './dto/update-driver-location.dto';
+import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
+import { UpdateDriverDto } from './dto/update-driver.dto';
 
 @Injectable()
 export class DriverService {
@@ -65,8 +68,16 @@ export class DriverService {
     return await this.driverRepository.save(driver);
   }
 
-  findAll() {
-    return `This action returns all driver`;
+  async findAll(findAllDto: FindAllDto) {
+    const [drivers, count] = await this.driverRepository.findAll(findAllDto, [
+      'account',
+      'license',
+      'matchingStatistic',
+    ]);
+    const driverAccounts = drivers.map((driver) =>
+      Object.assign(driver, instanceToPlain(driver.account)),
+    );
+    return new PagingResponseDto(driverAccounts, count, findAllDto);
   }
 
   findOne(id: number) {

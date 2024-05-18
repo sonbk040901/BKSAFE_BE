@@ -55,7 +55,6 @@ export class Driver extends BaseEntity {
     { cascade: ['insert', 'update'] },
   )
   matchingStatistic: MatchingStatistic;
-  @Exclude()
   @Column({
     type: 'enum',
     enum: ActivateStatus,

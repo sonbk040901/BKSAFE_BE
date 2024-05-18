@@ -1,28 +1,28 @@
+import { FindSuggestDriverDto } from '@booking/dto/find-suggest-driver.dto';
 import { Injectable } from '@nestjs/common';
-import { CreateBookingDto } from './dto/create-booking.dto';
-import { DrivingCostService } from '~utils/driving-cost.service';
-import { BookingRepository } from '~repos/booking.repository';
+import { instanceToPlain } from 'class-transformer';
+import { PagingResponseDto } from '~dto/paging-response.dto';
+import { Account } from '~entities/account.entity';
 import { BookingStatus } from '~entities/booking.entity';
+import { Driver } from '~entities/driver.entity';
+import { LocationType } from '~entities/location.entity';
+import { MatchingStatistic } from '~entities/matching-statistic.entity';
 import {
   BookingNotFoundException,
   NotCompletedBookingAlreadyExistsException,
 } from '~exceptions/httpException';
-import { FindAllDto } from './dto/find-all.dto';
-import { Account } from '~entities/account.entity';
-import { ChangeFindDriverModeDto } from './dto/change-find-driver-mode.dto';
-import { LocationType } from '~entities/location.entity';
-import { NoteRepository } from '~repos/note.repository';
-import { PagingResponseDto } from '~dto/paging-response.dto';
-import { BookingSuggestDriverRepository } from '~repos/booking-suggest-driver.repository';
-import { FindSuggestDriverDto } from '@booking/dto/find-suggest-driver.dto';
-import { DriverPriorityService } from '~utils/driver-priority.service';
-import { DriverRepository } from '~repos/driver.repository';
-import { DistanceService } from '~utils/distance.service';
-import { Driver } from '~entities/driver.entity';
-import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
-import { MatchingStatistic } from '~entities/matching-statistic.entity';
-import { instanceToPlain } from 'class-transformer';
 import { ILocation } from '~interfaces/location.interface';
+import { BookingSuggestDriverRepository } from '~repos/booking-suggest-driver.repository';
+import { BookingRepository } from '~repos/booking.repository';
+import { DriverRepository } from '~repos/driver.repository';
+import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
+import { NoteRepository } from '~repos/note.repository';
+import { DistanceService } from '~utils/distance.service';
+import { DriverPriorityService } from '~utils/driver-priority.service';
+import { DrivingCostService } from '~utils/driving-cost.service';
+import { ChangeFindDriverModeDto } from './dto/change-find-driver-mode.dto';
+import { CreateBookingDto } from './dto/create-booking.dto';
+import { FindAllDto } from './dto/find-all.dto';
 
 @Injectable()
 export class BookingService {
@@ -208,7 +208,6 @@ export class BookingService {
     const suggestDrivers: Driver[] = [];
     results.forEach((driver) => {
       console.log('distance', driver);
-      
       const distance = this.distanceService.calculate(pickup, driver.location);
       if (distance > 2500) return;
       const matchingStatistic = driver.matchingStatistic;

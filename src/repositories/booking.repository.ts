@@ -97,7 +97,7 @@ export class BookingRepository extends Repository<Booking> {
       },
       take: findAllDto.take,
       skip: findAllDto.skip,
-      relations
+      relations,
     });
   }
 
