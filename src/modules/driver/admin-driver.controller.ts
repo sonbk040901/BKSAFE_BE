@@ -20,6 +20,11 @@ export class AdminDriverController {
     return this.driverService.findAll(findAllDto);
   }
 
+  @Get('statistic')
+  statistic() {
+    return this.driverService.statistic();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.driverService.findOne(+id);

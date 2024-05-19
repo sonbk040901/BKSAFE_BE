@@ -10,6 +10,7 @@ import { Socket } from 'socket.io';
 import { UpdateDriverLocationDto } from '@driver/dto/update-driver-location.dto';
 import { Account } from '~entities/account.entity';
 import { DriverService } from '@driver/driver.service';
+import { CurrentAcc } from '~/common/decorators/param/current-account.decorator';
 
 @WebSocketGateway({ cors: '*', namespace: 'driver' })
 export class DriverGateway extends BaseGateway<AuthService> {
@@ -24,13 +25,13 @@ export class DriverGateway extends BaseGateway<AuthService> {
   async handleUpdateLocation(
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: UpdateDriverLocationDto,
+    @CurrentAcc() driver: Account,
   ) {
-    const driver: Account = client.data.user;
     const booking = await this.driverService.updateLocation(driver.id, payload);
     if (!booking) return;
     this.server.server
       .of('booking')
       .to(booking.userId.toString())
-      .emit('current', booking.id);
+      .emit('current-driver-location', payload);
   }
 }

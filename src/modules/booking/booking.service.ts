@@ -1,5 +1,5 @@
 import { FindSuggestDriverDto } from '@booking/dto/find-suggest-driver.dto';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { instanceToPlain } from 'class-transformer';
 import { PagingResponseDto } from '~dto/paging-response.dto';
 import { Account } from '~entities/account.entity';
@@ -148,7 +148,13 @@ export class BookingService {
     await this.updateMatchingStatistic(account.id, [
       { increase: true, field: 'accept' },
     ]);
-    return this.bookingRepository.save(booking);
+    const driver = await this.driverRepository.findOneOrFail({
+      where: { id: account.id },
+    });
+    return [
+      await this.bookingRepository.save(booking),
+      Object.assign(driver, instanceToPlain(account)),
+    ] as const;
   }
 
   async rejectBooking(account: Account, id: number) {
@@ -207,7 +213,6 @@ export class BookingService {
 
     const suggestDrivers: Driver[] = [];
     results.forEach((driver) => {
-      console.log('distance', driver);
       const distance = this.distanceService.calculate(pickup, driver.location);
       if (distance > 2500) return;
       const matchingStatistic = driver.matchingStatistic;
@@ -267,8 +272,17 @@ export class BookingService {
         id,
         account.id,
         BookingStatus.DRIVING,
+        ['locations'],
       );
     if (!booking) throw new BookingNotFoundException();
+    const driver = await this.driverRepository.findOneOrFail({
+      where: { id: account.id },
+    });
+    const distance = this.distanceService.calculate(
+      driver.location,
+      booking.dropOffLocation,
+    );
+    if (distance > 200) throw new BadRequestException('Distance is too far');
     booking.status = BookingStatus.COMPLETED;
     await this.updateMatchingStatistic(account.id, [
       { increase: true, field: 'success' },

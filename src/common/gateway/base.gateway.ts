@@ -3,7 +3,7 @@ import {
   OnGatewayDisconnect,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket, Namespace } from 'socket.io';
+import { Socket, Namespace } from 'socket.io';
 import { Account } from '~entities/account.entity';
 import { UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from '~guards/ws-jwt.guard';

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { instanceToPlain } from 'class-transformer';
 import { PagingResponseDto } from '~/common/dto/paging-response.dto';
 import { Booking } from '~entities/booking.entity';
-import { DriverStatus } from '~entities/driver.entity';
+import { ActivateStatus, DriverStatus } from '~entities/driver.entity';
 import { DriverNotFoundException } from '~exceptions/httpException';
 import { BookingRepository } from '~repos/booking.repository';
 import { DriverRepository } from '~repos/driver.repository';
@@ -79,7 +79,36 @@ export class DriverService {
     );
     return new PagingResponseDto(driverAccounts, count, findAllDto);
   }
-
+  async statistic() {
+    const statusResult: {
+      total: string;
+      status: DriverStatus;
+    }[] = await this.driverRepository.query(
+      'SELECT COUNT(*) as total, status FROM drivers GROUP BY status',
+    );
+    const activateStatusResult: {
+      total: number;
+      activateStatus: ActivateStatus;
+    }[] = await this.driverRepository.query(
+      'SELECT COUNT(*) as total, activate_status activateStatus FROM drivers GROUP BY activate_status',
+    );
+    const status = statusResult.reduce((acc, { total, status }) => {
+      acc[status] = +total;
+      return acc;
+    }, {});
+    const activateStatus = activateStatusResult.reduce(
+      (acc, { total, activateStatus }) => {
+        acc[activateStatus] = +total;
+        return acc;
+      },
+      {},
+    );
+    return {
+      total: statusResult.reduce((acc, { total }) => +total + acc, 0),
+      status,
+      activateStatus,
+    };
+  }
   findOne(id: number) {
     return `This action returns a #${id} driver`;
   }

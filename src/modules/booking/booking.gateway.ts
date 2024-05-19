@@ -1,29 +1,23 @@
-import {
-  ConnectedSocket,
-  MessageBody,
-  SubscribeMessage,
-  WebSocketGateway,
-} from '@nestjs/websockets';
-import { Socket } from 'socket.io';
-import { CurrentAcc } from '~decors/param/current-account.decorator';
-import { Account } from '~entities/account.entity';
 import { AuthService } from '@auth/auth.service';
+import { WebSocketGateway } from '@nestjs/websockets';
+import { instanceToPlain } from 'class-transformer';
 import { BaseGateway } from '~/common/gateway/base.gateway';
+import { BookingStatus } from '~/entities/booking.entity';
+import { Driver } from '~/entities/driver.entity';
 
 @WebSocketGateway({ cors: '*', namespace: 'booking' })
 export class BookingGateway extends BaseGateway<AuthService> {
   constructor(authService: AuthService) {
     super(authService);
   }
+  updateBookingStatus(userId: number, status: BookingStatus) {
+    this.server.to(userId.toString()).emit('current-status', status);
+  }
 
-  @SubscribeMessage('message')
-  handleMessage(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() payload: any,
-    @CurrentAcc() currentAcc: Account,
-  ): string {
-    this.server.emit('message', { payload, from: currentAcc });
-    return 'Hello world!';
+  updateBookingDriver(userId: number, driver: Driver) {
+    this.server
+      .to(userId.toString())
+      .emit('current-driver', instanceToPlain(driver));
   }
 
   updateBooking(userId: number, bookingId: number) {

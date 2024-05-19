@@ -40,6 +40,8 @@ export class Booking extends BaseEntity {
   price: number;
   @Column({ type: 'float', nullable: true })
   rating: number;
+  @Column({ nullable: true })
+  review: string;
   @Column({ type: 'enum', enum: BookingStatus, default: BookingStatus.PENDING })
   @Transform(({ value }) => BookingStatus[value])
   status: BookingStatus;
