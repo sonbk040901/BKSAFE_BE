@@ -5,6 +5,7 @@ import { AdminCtrl } from '~decors/controller/controller.decorator';
 import { ChangeFindDriverModeDto } from '@booking/dto/change-find-driver-mode.dto';
 import { BookingGateway } from '@booking/booking.gateway';
 import { FindSuggestDriverDto } from '@booking/dto/find-suggest-driver.dto';
+import { BookingStatus } from '~/entities/booking.entity';
 
 @AdminCtrl('bookings')
 export class AdminBookingController {
@@ -37,6 +38,7 @@ export class AdminBookingController {
   async rejectBooking(@Param('id') bookingId: number) {
     const userId = await this.bookingService.reject(bookingId);
     this.bookingGateway.updateBooking(userId, bookingId);
+    this.bookingGateway.updateBookingStatus(userId, BookingStatus.REJECTED);
   }
 
   @Get(':id/suggest/drivers')
