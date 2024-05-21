@@ -1,12 +1,4 @@
-import {
-  Body,
-  Get,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { CurrentAcc } from '~decors/param/current-account.decorator';
@@ -15,6 +7,7 @@ import { Account } from '~entities/account.entity';
 import { UserCtrl } from '~decors/controller/controller.decorator';
 import { BookingGateway } from '@booking/booking.gateway';
 import { Booking } from '~entities/booking.entity';
+import { RatingDto } from '@booking/dto/rating.dto';
 
 @UserCtrl('bookings')
 export class UserBookingController {
@@ -58,20 +51,22 @@ export class UserBookingController {
   }
 
   @Get(':id')
-  findOne(
-    @CurrentAcc('id') userId: number,
-    @Param('id', ParseIntPipe) bookingId: number,
-  ) {
+  findOne(@CurrentAcc('id') userId: number, @Param('id') bookingId: number) {
     return this.bookingService.findOne(bookingId, userId);
   }
 
   @Patch(':id/cancel')
   async cancel(
     @CurrentAcc('id') userId: number,
-    @Param('id', ParseIntPipe) bookingId: number,
+    @Param('id') bookingId: number,
   ) {
     const booking = await this.bookingService.cancel(userId, bookingId);
     this.bookingGateway.updateBooking(userId, bookingId);
     return booking;
+  }
+
+  @Post('rating')
+  rate(@CurrentAcc('id') userId: number, @Body() ratingDto: RatingDto) {
+    return this.bookingService.rate(userId, ratingDto);
   }
 }

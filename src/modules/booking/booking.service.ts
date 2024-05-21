@@ -23,6 +23,8 @@ import { DrivingCostService } from '~utils/driving-cost.service';
 import { ChangeFindDriverModeDto } from './dto/change-find-driver-mode.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { FindAllDto } from './dto/find-all.dto';
+import { RatingDto } from '@booking/dto/rating.dto';
+import { IsNull, Not } from 'typeorm';
 
 @Injectable()
 export class BookingService {
@@ -354,5 +356,15 @@ export class BookingService {
       acc[status] = +count;
       return acc;
     }, {});
+  }
+
+  async rate(userId: number, ratingDto: RatingDto) {
+    const booking = await this.bookingRepository.findOne({
+      where: { id: ratingDto.bookingId, userId, rating: IsNull() },
+    });
+    if (!booking) throw new BookingNotFoundException();
+    booking.rating = ratingDto.rating;
+    booking.review = ratingDto.review;
+    return this.bookingRepository.save(booking);
   }
 }
