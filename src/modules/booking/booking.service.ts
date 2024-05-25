@@ -24,7 +24,7 @@ import { ChangeFindDriverModeDto } from './dto/change-find-driver-mode.dto';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { FindAllDto } from './dto/find-all.dto';
 import { RatingDto } from '@booking/dto/rating.dto';
-import { IsNull, Not } from 'typeorm';
+import { IsNull } from 'typeorm';
 
 @Injectable()
 export class BookingService {

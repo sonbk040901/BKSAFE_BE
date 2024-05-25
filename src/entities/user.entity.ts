@@ -9,7 +9,7 @@ export class User extends BaseEntity {
   @OneToOne(() => Account, { cascade: ['insert'] })
   @JoinColumn({ name: 'id' })
   account: Account;
-  @OneToOne(() => Car, { eager: true, cascade: ['insert'] })
+  @OneToOne(() => Car, { cascade: ['insert'] })
   @JoinColumn({ name: 'car_id' })
   car: Car;
   @Exclude()

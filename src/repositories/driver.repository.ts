@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { FindAllDto } from '~/modules/driver/dto/find-all.dto';
-import { Driver, DriverStatus } from '~entities/driver.entity';
+import { Driver } from '~entities/driver.entity';
 
 @Injectable()
 export class DriverRepository extends Repository<Driver> {
