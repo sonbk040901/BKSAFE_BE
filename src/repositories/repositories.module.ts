@@ -7,6 +7,7 @@ import { UserRepository } from '~repos/user.repository';
 import { NoteRepository } from '~repos/note.repository';
 import { BookingSuggestDriverRepository } from '~repos/booking-suggest-driver.repository';
 import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
+import { AdminRepository } from '~repos/admin.repository';
 
 @Global()
 @Module({
@@ -19,6 +20,7 @@ import { MatchingStatisticRepository } from '~repos/matching-statistic.repositor
     BookingRepository,
     UserRepository,
     NoteRepository,
+    AdminRepository,
     BookingSuggestDriverRepository,
     MatchingStatisticRepository,
   ],
@@ -28,6 +30,7 @@ import { MatchingStatisticRepository } from '~repos/matching-statistic.repositor
     DriverRepository,
     BookingRepository,
     UserRepository,
+    AdminRepository,
     NoteRepository,
     BookingSuggestDriverRepository,
     MatchingStatisticRepository,

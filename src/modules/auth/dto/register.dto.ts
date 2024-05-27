@@ -1,10 +1,10 @@
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
   IsStrongPassword,
-  Matches,
 } from 'class-validator';
 import { Gender } from '~entities/account.entity';
 import { Transform } from 'class-transformer';
@@ -27,7 +27,7 @@ export class RegisterDto {
   })
   password: string;
   @IsOptional()
-  @Matches(/^(MALE|FEMALE|OTHER)$/)
   @Transform(({ value }) => value.toUpperCase())
+  @IsEnum(Gender)
   gender: Gender;
 }

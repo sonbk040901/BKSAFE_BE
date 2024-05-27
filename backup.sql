@@ -80,13 +80,13 @@ BEGIN
         DO
             -- Random data
             SET username = CONCAT('driver', i);
-            SET p_password = CONCAT('password', i);
+            SET p_password = '$2b$10$7dID7r0ihyDKgV8TDPMyIuoWnM8jwtrglWUL1O6rh0jSclDtchlHy';
             SET email = CONCAT('driver', i, '@gmail.com');
             SET fullName = CONCAT('Full Name ', i);
             SET phone = CONCAT('0', LPAD(FLOOR(RAND() * 999999999) + 1, 9, '3')); -- Random phone number
             SET birthday =
                     DATE_ADD('1970-01-01', INTERVAL FLOOR(RAND() * 365 * 50) DAY); -- Random birthday within 50 years
-            SET avatar = CONCAT('https://randomavatar.com/avatar/', i);
+            SET avatar = CONCAT('https://i.pravatar.cc/500');
             SET status = ROUND(RAND() * 2) + 1;
             SET address = CONCAT('Address ', i);
             SET location_address = CONCAT('Location Address ', i);
@@ -103,5 +103,12 @@ BEGIN
         END WHILE;
 END $$
 DELIMITER ;
-
-# call generate_driver_data();
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `clean_licenses_table` $$
+CREATE PROCEDURE clean_licenses_table()
+BEGIN
+    DELETE FROM licenses WHERE id NOT IN (SELECT distinct license_id FROM drivers where license_id is not null);
+END $$
+DELIMITER ;
+call generate_driver_data();
+call clean_licenses_table();

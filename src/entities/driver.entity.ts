@@ -37,7 +37,7 @@ export class Driver extends BaseEntity {
   address: string;
   @Column({ type: 'float', default: 5 })
   rating: number;
-  @OneToOne(() => Account, { cascade: ['insert'] })
+  @OneToOne(() => Account, { cascade: ['insert', 'update'] })
   @JoinColumn({ name: 'id' })
   @Exclude()
   account: Account;

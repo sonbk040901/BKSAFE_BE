@@ -6,7 +6,7 @@ import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User extends BaseEntity {
-  @OneToOne(() => Account, { cascade: ['insert'] })
+  @OneToOne(() => Account, { cascade: ['insert', 'update'] })
   @JoinColumn({ name: 'id' })
   account: Account;
   @OneToOne(() => Car, { cascade: ['insert'] })

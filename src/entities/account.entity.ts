@@ -4,6 +4,7 @@ import { Role } from './role.entity';
 import { Exclude } from 'class-transformer';
 import { Driver } from '~entities/driver.entity';
 import { User } from '~entities/user.entity';
+import { Admin } from '~entities/admin.entity';
 
 export enum Gender {
   MALE = 'MALE',
@@ -24,7 +25,7 @@ export class Account extends BaseEntity {
   phone: string;
   @Column()
   fullName: string;
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 511 })
   avatar: string;
   @Column({ type: 'enum', enum: Gender, default: Gender.OTHER })
   gender: Gender;
@@ -40,4 +41,18 @@ export class Account extends BaseEntity {
   driver?: Driver;
   @OneToOne(() => User, (user) => user.account, { cascade: false })
   user?: User;
+  @OneToOne(() => Admin, (admin) => admin.account, { cascade: false })
+  admin?: Admin;
+
+  isActivatedUser(): this is Account & { user: User } {
+    return this.roles?.some((role) => role.name === 'user');
+  }
+
+  isActivatedDriver(): this is Account & { driver: Driver } {
+    return this.roles?.some((role) => role.name === 'driver');
+  }
+
+  isActivatedAdmin(): this is Account & { admin: Admin } {
+    return this.roles?.some((role) => role.name === 'admin');
+  }
 }

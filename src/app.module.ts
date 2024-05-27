@@ -17,6 +17,7 @@ import { RoleGuard } from '~guards/role.guard';
 import { JwtGuard } from '~guards/jwt.guard';
 import { CacheModule } from '@nestjs/cache-manager';
 import { UserModule } from './modules/user/user.module';
+import { ProfileModule } from '~/modules/profile/profile.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { UserModule } from './modules/user/user.module';
     MapModule,
     BookingModule,
     UserModule,
+    ProfileModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },

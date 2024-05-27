@@ -4,9 +4,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-export class EmailOrPasswordIncorrectException extends UnauthorizedException {
+export class PhoneOrPasswordIncorrectException extends UnauthorizedException {
   constructor() {
-    super('Email or password is incorrect 🤕!');
+    super('Phone or password is incorrect 🤕!');
   }
 }
 
@@ -16,21 +16,21 @@ export class PasswordIncorrectForAlreadyEmailException extends UnauthorizedExcep
   }
 }
 
-export class EmailAlreadyExistsException extends ConflictException {
-  constructor(email: string) {
-    super(`Email ${email} already exists 🤯!`);
+export class PhoneNumberAlreadyExistsException extends ConflictException {
+  constructor(phone: string) {
+    super(`Phone ${phone} already exists 🤯!`);
   }
 }
 
 export class DriverAlreadyExistsException extends ConflictException {
-  constructor(email: string) {
-    super(`Driver ${email} already exists 😡!`);
+  constructor(phone: string) {
+    super(`Driver ${phone} already exists 😡!`);
   }
 }
 
 export class DriverRegisterIsPending extends ConflictException {
-  constructor(email: string) {
-    super(`Driver register for ${email} is pending 😡!`);
+  constructor(phone: string) {
+    super(`Driver register for ${phone} is pending 😡!`);
   }
 }
 
@@ -67,5 +67,35 @@ export class JwtTokenExpiredException extends UnauthorizedException {
 export class JwtTokenInvalidException extends UnauthorizedException {
   constructor() {
     super('Token invalid');
+  }
+}
+
+export class ActivationIncorrectWrongException extends UnauthorizedException {
+  constructor() {
+    super('Activation code is incorrect 🤕!');
+  }
+}
+
+export class UserAlreadyActivatedException extends ConflictException {
+  constructor() {
+    super('User already activated 😡!');
+  }
+}
+
+export class DriverAlreadyActivatedException extends ConflictException {
+  constructor() {
+    super('Driver already activated 😡!');
+  }
+}
+
+export class UserNotFoundException extends NotFoundException {
+  constructor() {
+    super('User not found 🧐!');
+  }
+}
+
+export class AccountNotActivatedException extends ConflictException {
+  constructor() {
+    super('Account not activated 😡!');
   }
 }

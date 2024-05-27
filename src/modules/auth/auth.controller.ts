@@ -1,4 +1,12 @@
-import { Body, Controller, Get, HttpCode, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Patch,
+  Post,
+  Res,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { Permit } from '~decors/meta/permit.decorator';
@@ -9,6 +17,8 @@ import { Roles } from '~decors/meta/roles.decorator';
 import { RegisterDriverDto } from '@auth/dto/register-driver.dto';
 import { RegisterDriverByUserDto } from '@auth/dto/register-driver-by-user.dto';
 import { Response } from 'express';
+import { ActiveUserDto } from '@auth/dto/active-user.dto';
+import { ActionDriverDto } from '@auth/dto/action-driver.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -71,5 +81,17 @@ export class AuthController {
       expires,
     });
     return token;
+  }
+
+  @Permit()
+  @Patch('active')
+  async activeUser(@Body() activeUserDto: ActiveUserDto) {
+    return this.authService.activeUser(activeUserDto);
+  }
+
+  @Roles('admin')
+  @Patch('action/driver')
+  async activeDriver(@Body() activeDriverDto: ActionDriverDto) {
+    return this.authService.activeDriver(activeDriverDto);
   }
 }

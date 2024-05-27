@@ -138,12 +138,12 @@ export class BookingService {
 
   async acceptBooking(account: Account, id: number) {
     const bsd = await this.bSDRepository.findOne({
-      where: { bookingId: id, driverId: account.id },
+      where: { bookingId: id, driverId: account.id, isRejected: false },
       relations: ['booking', 'booking.locations'],
     });
     if (!bsd) throw new BookingNotFoundException();
     const booking = bsd.booking;
-    await this.bSDRepository.delete({ bookingId: id, driverId: account.id });
+    await this.bSDRepository.delete({ bookingId: id });
     booking.status = BookingStatus.RECEIVED;
     booking.driverId = account.id;
     booking.nextLocationId = bsd.booking.pickupLocation.id;
@@ -167,7 +167,10 @@ export class BookingService {
     await this.updateMatchingStatistic(account.id, [
       { increase: true, field: 'reject' },
     ]);
-    await this.bSDRepository.delete({ bookingId: id, driverId: account.id });
+    await this.bSDRepository.update(
+      { bookingId: id, driverId: account.id },
+      { isRejected: true },
+    );
   }
 
   async suggestDriver(bookingId: number, driverId: number) {
@@ -179,9 +182,6 @@ export class BookingService {
       booking,
       driverId,
     });
-    // await this.bookingRepository.update(bookingId, {
-    //   status: BookingStatus.ACCEPTED,
-    // });
     await this.updateMatchingStatistic(driverId, [
       { increase: true, field: 'total' },
     ]);
@@ -199,7 +199,10 @@ export class BookingService {
     });
     if (!booking) throw new BookingNotFoundException();
     const pickup = booking.pickupLocation;
-    const suggestDrivers = await this.getSuggestDriversByLocation(pickup);
+    const suggestDrivers = await this.getSuggestDriversByLocation(
+      pickup,
+      bookingId,
+    );
     const data = suggestDrivers.slice(
       suggestDriverDto.skip,
       suggestDriverDto.skip + suggestDriverDto.take,
@@ -207,11 +210,26 @@ export class BookingService {
     return new PagingResponseDto(data, suggestDrivers.length, suggestDriverDto);
   }
 
-  private async getSuggestDriversByLocation(pickup: ILocation) {
-    const results = await this.driverRepository.findAllAvailableDrivers([
-      'matchingStatistic',
-      'account',
-    ]);
+  private async getSuggestDriversByLocation(
+    pickup: ILocation,
+    bookingId?: number,
+  ) {
+    // const results = await this.driverRepository.findAllAvailableDrivers([
+    //   'matchingStatistic',
+    //   'account',
+    // ]);
+
+    const results = await this.driverRepository
+      .createQueryBuilder('d')
+      .innerJoinAndSelect(
+        'd.bookingSuggestDriver',
+        'bsd',
+        'bsd.bookingId = :id and bsd.driverId = d.id and bsd.status = false',
+        { id: bookingId },
+      )
+      .leftJoinAndSelect('d.matchingStatistic', 'matchingStatistic')
+      .innerJoinAndSelect('d.account', 'account')
+      .getMany();
 
     const suggestDrivers: Driver[] = [];
     results.forEach((driver) => {

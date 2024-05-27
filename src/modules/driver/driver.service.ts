@@ -64,7 +64,7 @@ export class DriverService {
   async updateStatus(id: number, driverStatusDto: UpdateDriverStatusDto) {
     const driver = await this.driverRepository.findById(id);
     if (!driver) throw new DriverNotFoundException();
-    driver.status = DriverStatus[driverStatusDto.status];
+    driver.status = driverStatusDto.status;
     return await this.driverRepository.save(driver);
   }
 
@@ -79,6 +79,7 @@ export class DriverService {
     );
     return new PagingResponseDto(driverAccounts, count, findAllDto);
   }
+
   async statistic() {
     const statusResult: {
       total: string;
@@ -109,6 +110,7 @@ export class DriverService {
       activateStatus,
     };
   }
+
   findOne(id: number) {
     return `This action returns a #${id} driver`;
   }

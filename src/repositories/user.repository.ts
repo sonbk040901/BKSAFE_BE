@@ -12,11 +12,21 @@ export class UserRepository extends Repository<User> {
     );
   }
 
-  async findOneByEmail(email: string) {
+  async findOneByPhone(phone: string) {
     return this.createQueryBuilder('user')
       .innerJoinAndSelect('user.account', 'account')
-      .innerJoinAndSelect('account.roles', 'roles')
-      .where('account.email = :email', { email })
+      .leftJoinAndSelect('account.roles', 'roles')
+      .where('account.phone = :phone', { phone })
+      .getOne();
+  }
+
+  async findOneByPhoneAndIsActivated(phone: string) {
+    return this.createQueryBuilder('user')
+      .innerJoinAndSelect('user.account', 'account')
+      .where('account.phone = :phone and user.isActivated = :isActivated', {
+        phone,
+        isActivated: true,
+      })
       .getOne();
   }
 }

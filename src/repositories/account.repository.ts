@@ -19,6 +19,20 @@ export class AccountRepository extends Repository<Account> {
     });
   }
 
+  findOneByPhone(phone: string, relations: string[] = []) {
+    return this.findOne({
+      where: { phone },
+      relations,
+    });
+  }
+
+  // findOneByPhoneAndActiveted(phone: string, relations: string[] = []) {
+  //   return this.findOne({
+  //     where: { phone, : true },
+  //     relations,
+  //   });
+  // }
+
   existsByEmail(email: string) {
     return this.existsBy({ email });
   }

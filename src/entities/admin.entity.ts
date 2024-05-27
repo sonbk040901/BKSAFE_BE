@@ -5,7 +5,7 @@ import { Exclude } from 'class-transformer';
 
 @Entity('admins')
 export class Admin extends BaseEntity {
-  @OneToOne(() => Account, { cascade: ['insert'] })
+  @OneToOne(() => Account, { cascade: ['insert', 'update'] })
   @JoinColumn({ name: 'id' })
   account: Account;
   @Exclude()

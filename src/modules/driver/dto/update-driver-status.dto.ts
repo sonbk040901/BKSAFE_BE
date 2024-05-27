@@ -1,8 +1,9 @@
-import { Matches } from 'class-validator';
+import { IsEnum } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { DriverStatus } from '~entities/driver.entity';
 
 export class UpdateDriverStatusDto {
   @Transform(({ value }) => value.toUpperCase())
-  @Matches(/^(AVAILABLE|BUSY|OFFLINE)$/)
-  status: 'AVAILABLE' | 'BUSY' | 'OFFLINE';
+  @IsEnum(DriverStatus)
+  status: DriverStatus;
 }

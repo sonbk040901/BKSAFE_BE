@@ -10,8 +10,14 @@ export class BookingSuggestDriverRepository extends Repository<BookingSuggestDri
 
   findOneByDriverId(driverId: number) {
     return this.findOne({
-      where: { driverId },
-      relations: ['booking', 'booking.locations', 'booking.notes'],
+      where: { driverId, isRejected: false },
+      relations: [
+        'booking',
+        'booking.locations',
+        'booking.notes',
+        'booking.user',
+        'booking.user.car',
+      ],
     });
   }
 }
