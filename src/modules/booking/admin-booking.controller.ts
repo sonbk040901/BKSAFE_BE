@@ -6,7 +6,9 @@ import { ChangeFindDriverModeDto } from '@booking/dto/change-find-driver-mode.dt
 import { BookingGateway } from '@booking/booking.gateway';
 import { FindSuggestDriverDto } from '@booking/dto/find-suggest-driver.dto';
 import { BookingStatus } from '~/entities/booking.entity';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('admin/bookings')
 @AdminCtrl('bookings')
 export class AdminBookingController {
   constructor(

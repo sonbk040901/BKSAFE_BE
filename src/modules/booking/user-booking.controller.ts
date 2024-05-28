@@ -8,7 +8,9 @@ import { UserCtrl } from '~decors/controller/controller.decorator';
 import { BookingGateway } from '@booking/booking.gateway';
 import { Booking } from '~entities/booking.entity';
 import { RatingDto } from '@booking/dto/rating.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('user/bookings')
 @UserCtrl('bookings')
 export class UserBookingController {
   constructor(

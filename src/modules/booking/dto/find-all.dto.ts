@@ -2,8 +2,16 @@ import { PagingAndSortDto } from '~dto/paging-and-sort.dto';
 import { IsEnum, IsOptional } from 'class-validator';
 import { BookingStatus } from '~entities/booking.entity';
 import { Transform } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class FindAllDto extends PagingAndSortDto {
+  @ApiProperty({
+    required: false,
+    enum: BookingStatus,
+    example: 'PENDING',
+    description: 'Filter by status',
+    isArray: true,
+  })
   @IsOptional()
   @IsEnum(BookingStatus, { each: true })
   @Transform(({ value }) => {

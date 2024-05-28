@@ -4,7 +4,9 @@ import { DriverService } from './driver.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { FindAllDto } from './dto/find-all.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('admin/drivers')
 @AdminCtrl('drivers')
 export class AdminDriverController {
   constructor(private readonly driverService: DriverService) {}

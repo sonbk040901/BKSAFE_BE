@@ -3,7 +3,9 @@ import { MapService } from './map.service';
 import { CalculateCostDto } from './dto/calculate-cost.dto';
 import { FindDriversDto } from './dto/find-drivers.dto';
 import { UserCtrl } from '~decors/controller/controller.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('map')
 @UserCtrl('map')
 export class MapController {
   constructor(private readonly mapService: MapService) {}

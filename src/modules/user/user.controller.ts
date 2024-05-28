@@ -2,7 +2,9 @@ import { AdminCtrl } from '~/common/decorators/controller/controller.decorator';
 import { UserService } from './user.service';
 import { Get, Query } from '@nestjs/common';
 import { FindAllDto } from './dto/find-all.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('users')
 @AdminCtrl('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}

@@ -5,7 +5,9 @@ import { Account } from '~entities/account.entity';
 import { UpdateProfileDto } from '~/modules/profile/dto/update-profile.dto';
 import { UpdateCarDto } from '~/modules/profile/dto/update-car.dto';
 import { UpdatePasswordDto } from '~/modules/profile/dto/update-password.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('profile')
 @Controller('profile')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}

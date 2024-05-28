@@ -5,7 +5,9 @@ import { Account } from '~entities/account.entity';
 import { FindAllDto } from '@booking/dto/find-all.dto';
 import { DriverCtrl } from '~decors/controller/controller.decorator';
 import { BookingGateway } from '@booking/booking.gateway';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('driver/bookings')
 @DriverCtrl('bookings')
 export class DriverBookingController {
   constructor(

@@ -19,7 +19,9 @@ import { RegisterDriverByUserDto } from '@auth/dto/register-driver-by-user.dto';
 import { Response } from 'express';
 import { ActiveUserDto } from '@auth/dto/active-user.dto';
 import { ActionDriverDto } from '@auth/dto/action-driver.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
