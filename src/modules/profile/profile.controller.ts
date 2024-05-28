@@ -1,11 +1,12 @@
 import { Body, Controller, Get, Patch } from '@nestjs/common';
-import { ProfileService } from './profile.service';
-import { CurrentAcc } from '~decors/param/current-account.decorator';
-import { Account } from '~entities/account.entity';
-import { UpdateProfileDto } from '~/modules/profile/dto/update-profile.dto';
+import { ApiTags } from '@nestjs/swagger';
+import { Roles } from '~/common/decorators/meta/roles.decorator';
 import { UpdateCarDto } from '~/modules/profile/dto/update-car.dto';
 import { UpdatePasswordDto } from '~/modules/profile/dto/update-password.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { UpdateProfileDto } from '~/modules/profile/dto/update-profile.dto';
+import { CurrentAcc } from '~decors/param/current-account.decorator';
+import { Account } from '~entities/account.entity';
+import { ProfileService } from './profile.service';
 
 @ApiTags('profile')
 @Controller('profile')
@@ -14,6 +15,18 @@ export class ProfileController {
 
   @Get()
   getProfile(@CurrentAcc() account: Account) {
+    return account;
+  }
+
+  @Get('driver')
+  @Roles('driver')
+  getDriverProfile(@CurrentAcc() account: Account) {
+    return account;
+  }
+
+  @Get('admin')
+  @Roles('admin')
+  getAdminProfile(@CurrentAcc() account: Account) {
     return account;
   }
 
