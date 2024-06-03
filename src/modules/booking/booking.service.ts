@@ -221,10 +221,10 @@ export class BookingService {
 
     const results = await this.driverRepository
       .createQueryBuilder('d')
-      .innerJoinAndSelect(
+      .leftJoinAndSelect(
         'd.bookingSuggestDriver',
         'bsd',
-        'bsd.bookingId = :id and bsd.driverId = d.id and bsd.status = false',
+        'bsd.bookingId = :id and bsd.driverId = d.id and bsd.is_rejected = false',
         { id: bookingId },
       )
       .leftJoinAndSelect('d.matchingStatistic', 'matchingStatistic')

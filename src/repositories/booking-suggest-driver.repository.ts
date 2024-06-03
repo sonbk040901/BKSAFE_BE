@@ -16,7 +16,7 @@ export class BookingSuggestDriverRepository extends Repository<BookingSuggestDri
         'booking.locations',
         'booking.notes',
         'booking.user',
-        'booking.user.car',
+        // 'booking.user.car',
       ],
     });
   }
