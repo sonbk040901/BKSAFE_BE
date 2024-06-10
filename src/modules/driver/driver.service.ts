@@ -11,9 +11,10 @@ import { FindAllDto } from './dto/find-all.dto';
 import { UpdateDriverLocationDto } from './dto/update-driver-location.dto';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
-import { ActionDriverDto } from '@driver/dto/action-driver.dto';
+import { ActionRegisterDriverDto } from '@driver/dto/action-register-driver.dto';
 import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
 import { ActivateStatus } from '~entities/account.entity';
+import { ActionDriverDto } from '@driver/dto/action-driver.dto';
 
 @Injectable()
 export class DriverService {
@@ -134,16 +135,17 @@ export class DriverService {
     return `This action removes a #${id} driver`;
   }
 
-  async action(activeDriverDto: ActionDriverDto) {
-    const { phone, status } = activeDriverDto;
-    const driver = await this.driverRepository.findOneByPhone(phone);
-    if (!driver) throw new DriverNotFoundException();
-    if (!driver.isActivated()) throw new DriverNotFoundException();
-    if (driver.registerStatus === status) return;
-    driver.registerStatus = status;
-    if (driver.isRegisterStatusAccepted()) {
-      driver.matchingStatistic = this.statisticRepository.create();
-    }
-    await this.driverRepository.save(driver);
+  actionRegister(id: number, actionDriverDto: ActionRegisterDriverDto) {
+    return this.driverRepository.update(
+      { id },
+      { registerStatus: actionDriverDto.status },
+    );
+  }
+
+  action(id: number, actionDriverDto: ActionDriverDto) {
+    return this.driverRepository.update(
+      { id },
+      { activateStatus: actionDriverDto.status },
+    );
   }
 }

@@ -4,6 +4,7 @@ import { UserRepository } from '~/repositories/user.repository';
 import { FindAllDto } from './dto/find-all.dto';
 import { StatisticResponseDto } from './dto/statistic-response.dto';
 import { IStatisticRecord } from './interfaces/statistic.interface';
+import { ActionUserDto } from '~/modules/user/dto/action-user.dto';
 
 @Injectable()
 export class UserService {
@@ -25,5 +26,12 @@ export class UserService {
       'select count(*) as count, activate_status activateStatus from users u group by activateStatus',
     );
     return new StatisticResponseDto(results);
+  }
+
+  async action(id: number, actionUserDto: ActionUserDto) {
+    return this.userRepository.update(
+      { id },
+      { activateStatus: actionUserDto.status },
+    );
   }
 }

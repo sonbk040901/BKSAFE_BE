@@ -5,6 +5,7 @@ import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { FindAllDto } from './dto/find-all.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { ActionRegisterDriverDto } from '@driver/dto/action-register-driver.dto';
 import { ActionDriverDto } from "@driver/dto/action-driver.dto";
 
 @ApiTags('admin/drivers')
@@ -43,8 +44,19 @@ export class DriverAdminController {
     return this.driverService.remove(+id);
   }
 
-  @Patch(':id/action')
-  async activeDriver(@Body() activeDriverDto: ActionDriverDto) {
-    return this.driverService.action(activeDriverDto);
+  @Patch(':id/action-register')
+  async actionRegister(
+    @Param('id') id: number,
+    @Body() actionRegisterDriverDto: ActionRegisterDriverDto,
+  ) {
+    return this.driverService.actionRegister(id, actionRegisterDriverDto);
+  }
+
+  @Patch(':id/action-register')
+  async action(
+    @Param('id') id: number,
+    @Body() actionDriverDto: ActionDriverDto,
+  ) {
+    return this.driverService.action(id, actionDriverDto);
   }
 }
