@@ -15,5 +15,6 @@ import { AuthModule } from '@auth/auth.module';
     BookingDriverController,
   ],
   providers: [BookingService, BookingGateway],
+  exports: [BookingGateway],
 })
 export class BookingModule {}

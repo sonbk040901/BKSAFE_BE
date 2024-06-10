@@ -5,18 +5,26 @@ import { UpdateDriverLocationDto } from './dto/update-driver-location.dto';
 import { CurrentAcc } from '~decors/param/current-account.decorator';
 import { UpdateDriverStatusDto } from '@driver/dto/update-driver-status.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { BookingGateway } from '@booking/booking.gateway';
 
 @ApiTags('driver/drivers')
 @DriverCtrl('drivers')
 export class DriverDriverController {
-  constructor(private readonly driverService: DriverService) {}
+  constructor(
+    private driverService: DriverService,
+    private bookingGateway: BookingGateway,
+  ) {}
 
   @Patch('location')
-  updateLocation(
+  async updateLocation(
     @CurrentAcc('id') id: number,
     @Body() updateDriverLocationDto: UpdateDriverLocationDto,
   ) {
-    return this.driverService.updateLocation(id, updateDriverLocationDto);
+    const booking = await this.driverService.updateLocation(
+      id,
+      updateDriverLocationDto,
+    );
+    if (booking) this.bookingGateway.updateBooking(booking.userId, booking.id);
   }
 
   @Patch('status')

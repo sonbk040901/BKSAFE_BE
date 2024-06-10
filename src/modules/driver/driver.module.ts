@@ -6,9 +6,10 @@ import { DriverAdminController } from '@driver/driver.admin.controller';
 import { DriverGateway } from './driver.gateway';
 import { AuthModule } from '@auth/auth.module';
 import { UtilsModule } from '~utils/utils.module';
+import { BookingModule } from '@booking/booking.module';
 
 @Module({
-  imports: [AuthModule, UtilsModule],
+  imports: [AuthModule, BookingModule, UtilsModule],
   controllers: [
     DriverAdminController,
     DriverDriverController,

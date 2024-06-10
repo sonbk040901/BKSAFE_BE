@@ -49,7 +49,7 @@ export class DriverService {
    * @param location
    * @private
    */
-  private updateNextLocation(
+  private async updateNextLocation(
     booking: Booking,
     location: UpdateDriverLocationDto,
   ) {
@@ -59,7 +59,7 @@ export class DriverService {
       const distance = this.distanceService.calculate(l, location);
       return distance < 200;
     });
-    if (index === -1 || index === 0) return booking;
+    if (index === -1 || index === 0) return null;
     if (index !== locations.length - 1)
       booking.nextLocationId = locations[index + 1].id;
     return this.bookingRepository.save(booking);
