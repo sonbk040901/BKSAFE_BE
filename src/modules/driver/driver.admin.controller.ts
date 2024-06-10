@@ -6,7 +6,7 @@ import { UpdateDriverDto } from './dto/update-driver.dto';
 import { FindAllDto } from './dto/find-all.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ActionRegisterDriverDto } from '@driver/dto/action-register-driver.dto';
-import { ActionDriverDto } from "@driver/dto/action-driver.dto";
+import { ActionDriverDto } from '@driver/dto/action-driver.dto';
 
 @ApiTags('admin/drivers')
 @AdminCtrl('drivers')

@@ -21,10 +21,7 @@ export class UserController {
   }
 
   @Patch(':id/action')
-  async activeDriver(
-    @Param('id') id: number,
-    @Body() actionUserDto: ActionUserDto,
-  ) {
+  async action(@Param('id') id: number, @Body() actionUserDto: ActionUserDto) {
     return this.userService.action(id, actionUserDto);
   }
 }
