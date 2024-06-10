@@ -1,11 +1,20 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne } from "typeorm";
-import { BaseEntity } from "./base.entity";
-import { Location } from "./location.entity";
-import { Transform } from "class-transformer";
-import { Note } from "~entities/note.entity";
-import { BookingSuggestDriver } from "~entities/booking-suggest-driver.entity";
-import { User } from "~entities/user.entity";
-import { Driver } from "~entities/driver.entity";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+} from 'typeorm';
+import { BaseEntity } from './base.entity';
+import { Location } from './location.entity';
+import { Transform } from 'class-transformer';
+import { Note } from '~entities/note.entity';
+import { BookingSuggestDriver } from '~entities/booking-suggest-driver.entity';
+import { User } from '~entities/user.entity';
+import { Driver } from '~entities/driver.entity';
 
 /**
  * * `PENDING`: Chờ xác nhận (đang chờ admin xác nhận)

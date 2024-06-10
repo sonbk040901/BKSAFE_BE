@@ -27,6 +27,7 @@ import { FindAllDto } from './dto/find-all.dto';
 import { RatingDto } from '@booking/dto/rating.dto';
 import { IsNull } from 'typeorm';
 import { LocationDto } from '@booking/dto/location.dto';
+import { BookingGateway } from './booking.gateway';
 
 @Injectable()
 export class BookingService {
@@ -41,6 +42,7 @@ export class BookingService {
     private bSDRepository: BookingSuggestDriverRepository,
     private driverRepository: DriverRepository,
     private statisticRepository: MatchingStatisticRepository,
+    private bookingGateway: BookingGateway,
   ) {}
 
   public getAutoFindDriver() {
@@ -73,15 +75,22 @@ export class BookingService {
     });
     await this.bookingRepository.save(booking);
     if (!this.autoFindDriver) return booking;
-    await this.autoSuggestDriver(pickup, booking.id);
+    this.autoSuggestDriver(pickup, booking.id);
     return booking;
   }
 
   private async autoSuggestDriver(pickup: LocationDto, bookingId: number) {
-    const suggestDrivers = await this.getSuggestDriversByLocation(pickup);
-    if (!suggestDrivers.length) return;
+    const suggestDrivers = await this.getSuggestDriversByLocation(
+      pickup,
+      bookingId,
+    );
+    if (!suggestDrivers.length) {
+      await this.bSDRepository.delete({ bookingId });
+      return;
+    }
     const driver = suggestDrivers[0];
     await this.suggestDriver(bookingId, driver.id);
+    this.bookingGateway.suggestDriver(driver.id, bookingId);
   }
 
   async findAll(findAllDto: FindAllDto) {
@@ -128,7 +137,7 @@ export class BookingService {
     const booking = await this.bookingRepository.findOneByIdAndUserIdAndStatus(
       id,
       userId,
-      [BookingStatus.PENDING],
+      [BookingStatus.PENDING, BookingStatus.ACCEPTED],
     );
     if (!booking) throw new BookingNotFoundException();
     booking.status = BookingStatus.CANCELLED;
@@ -177,8 +186,11 @@ export class BookingService {
         bookingId,
       });
       if (bsds.length && bsds.every((bsd) => bsd.isRejected)) {
-        const booking = await this.bookingRepository.findOneByOrFail({
-          id: bookingId,
+        const booking = await this.bookingRepository.findOneOrFail({
+          where: {
+            id: bookingId,
+          },
+          relations: ['locations'],
         });
         await this.autoSuggestDriver(booking.pickupLocation, bookingId);
       }
@@ -203,7 +215,10 @@ export class BookingService {
     await this.updateMatchingStatistic(driverId, [
       { increase: true, field: 'total' },
     ]);
-    setTimeout(() => this.rejectBooking(driverId, booking.id).catch(), 21_000);
+    setTimeout(
+      () => this.rejectBooking(driverId, booking.id).catch(() => {}),
+      21_000,
+    );
     return booking;
   }
 
@@ -230,18 +245,15 @@ export class BookingService {
 
   private async getSuggestDriversByLocation(
     pickup: ILocation,
-    bookingId?: number,
+    bookingId: number,
   ) {
     const results = await this.driverRepository
       .createQueryBuilder('d')
-      .leftJoinAndSelect(
-        'd.bookingSuggestDriver',
-        'bsd',
-        'bsd.bookingId = :id and bsd.driverId = d.id and bsd.is_rejected = false',
+      .where(
+        'd.id not in (select driver_id from booking_suggest_drivers where booking_id = :id)',
         { id: bookingId },
       )
       .leftJoinAndSelect('d.matchingStatistic', 'matchingStatistic')
-      .innerJoinAndSelect('d.account', 'account')
       .getMany();
 
     const suggestDrivers: Driver[] = [];

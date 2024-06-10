@@ -24,6 +24,7 @@ export class DriverDriverController {
       id,
       updateDriverLocationDto,
     );
+    console.log('booking', booking);
     if (booking) this.bookingGateway.updateBooking(booking.userId, booking.id);
   }
 
