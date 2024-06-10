@@ -52,7 +52,7 @@ export class DriverAdminController {
     return this.driverService.actionRegister(id, actionRegisterDriverDto);
   }
 
-  @Patch(':id/action-register')
+  @Patch(':id/action')
   async action(
     @Param('id') id: number,
     @Body() actionDriverDto: ActionDriverDto,
