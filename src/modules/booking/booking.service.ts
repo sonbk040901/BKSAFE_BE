@@ -1,14 +1,15 @@
 import { FindSuggestDriverDto } from '@booking/dto/find-suggest-driver.dto';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { instanceToPlain } from 'class-transformer';
 import { PagingResponseDto } from '~dto/paging-response.dto';
 import { Account } from '~entities/account.entity';
-import { BookingStatus } from '~entities/booking.entity';
+import { Booking, BookingStatus } from '~entities/booking.entity';
 import { Driver } from '~entities/driver.entity';
 import { LocationType } from '~entities/location.entity';
 import { MatchingStatistic } from '~entities/matching-statistic.entity';
 import {
   BookingNotFoundException,
+  DistanceTooFarException,
   NotCompletedBookingAlreadyExistsException,
 } from '~exceptions/httpException';
 import { ILocation } from '~interfaces/location.interface';
@@ -25,6 +26,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { FindAllDto } from './dto/find-all.dto';
 import { RatingDto } from '@booking/dto/rating.dto';
 import { IsNull } from 'typeorm';
+import { LocationDto } from '@booking/dto/location.dto';
 
 @Injectable()
 export class BookingService {
@@ -40,6 +42,10 @@ export class BookingService {
     private driverRepository: DriverRepository,
     private statisticRepository: MatchingStatisticRepository,
   ) {}
+
+  public getAutoFindDriver() {
+    return this.autoFindDriver;
+  }
 
   async create(createBookingDto: CreateBookingDto, userId: number) {
     const isExistNotCompleted =
@@ -65,19 +71,17 @@ export class BookingService {
       note,
       notes,
     });
-    if (!this.autoFindDriver) return this.bookingRepository.save(booking);
+    await this.bookingRepository.save(booking);
+    if (!this.autoFindDriver) return booking;
+    await this.autoSuggestDriver(pickup, booking.id);
+    return booking;
+  }
+
+  private async autoSuggestDriver(pickup: LocationDto, bookingId: number) {
     const suggestDrivers = await this.getSuggestDriversByLocation(pickup);
-    if (!suggestDrivers.length) return this.bookingRepository.save(booking);
+    if (!suggestDrivers.length) return;
     const driver = suggestDrivers[0];
-    booking.status = BookingStatus.ACCEPTED;
-    const bsd = this.bSDRepository.create({
-      booking,
-      driverId: driver.id,
-    });
-    await this.updateMatchingStatistic(driver.id, [
-      { increase: true, field: 'total' },
-    ]);
-    return this.bSDRepository.save(bsd);
+    await this.suggestDriver(bookingId, driver.id);
   }
 
   async findAll(findAllDto: FindAllDto) {
@@ -159,33 +163,47 @@ export class BookingService {
     ] as const;
   }
 
-  async rejectBooking(account: Account, id: number) {
-    const bsd = await this.bSDRepository.findOne({
-      where: { bookingId: id, driverId: account.id },
-    });
-    if (!bsd) throw new BookingNotFoundException();
-    await this.updateMatchingStatistic(account.id, [
-      { increase: true, field: 'reject' },
-    ]);
-    await this.bSDRepository.update(
-      { bookingId: id, driverId: account.id },
+  async rejectBooking(driverId: number, bookingId: number) {
+    const result = await this.bSDRepository.update(
+      { bookingId, driverId, isRejected: false },
       { isRejected: true },
     );
+    if (!result.affected) throw new BookingNotFoundException();
+    await this.updateMatchingStatistic(driverId, [
+      { increase: true, field: 'reject' },
+    ]);
+    if (this.autoFindDriver) {
+      const bsds = await this.bSDRepository.findBy({
+        bookingId,
+      });
+      if (bsds.length && bsds.every((bsd) => bsd.isRejected)) {
+        const booking = await this.bookingRepository.findOneByOrFail({
+          id: bookingId,
+        });
+        await this.autoSuggestDriver(booking.pickupLocation, bookingId);
+      }
+    }
   }
 
-  async suggestDriver(bookingId: number, driverId: number) {
-    const booking = await this.bookingRepository.findOneByOrFail({
-      id: bookingId,
-    });
-    booking.status = BookingStatus.ACCEPTED;
-    const bsd = this.bSDRepository.create({
-      booking,
+  async suggestDriver(bookingIdOrBooking: number | Booking, driverId: number) {
+    const booking =
+      typeof bookingIdOrBooking === 'number'
+        ? await this.bookingRepository.findOneByOrFail({
+            id: bookingIdOrBooking,
+          })
+        : bookingIdOrBooking;
+    await this.bSDRepository.insert({
+      bookingId: booking.id,
       driverId,
     });
+    await this.bookingRepository.update(
+      { id: booking.id },
+      { status: BookingStatus.ACCEPTED },
+    );
     await this.updateMatchingStatistic(driverId, [
       { increase: true, field: 'total' },
     ]);
-    await this.bSDRepository.save(bsd);
+    setTimeout(() => this.rejectBooking(driverId, booking.id).catch(), 21_000);
     return booking;
   }
 
@@ -214,11 +232,6 @@ export class BookingService {
     pickup: ILocation,
     bookingId?: number,
   ) {
-    // const results = await this.driverRepository.findAllAvailableDrivers([
-    //   'matchingStatistic',
-    //   'account',
-    // ]);
-
     const results = await this.driverRepository
       .createQueryBuilder('d')
       .leftJoinAndSelect(
@@ -300,7 +313,7 @@ export class BookingService {
       driver.location,
       booking.dropOffLocation,
     );
-    if (distance > 200) throw new BadRequestException('Distance is too far');
+    if (distance > 200) throw new DistanceTooFarException();
     booking.status = BookingStatus.COMPLETED;
     await this.updateMatchingStatistic(account.id, [
       { increase: true, field: 'success' },

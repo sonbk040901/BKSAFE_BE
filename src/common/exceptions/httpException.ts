@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   NotFoundException,
   UnauthorizedException,
@@ -107,5 +108,11 @@ export class UserNotFoundException extends NotFoundException {
 export class AccountNotActivatedException extends ConflictException {
   constructor() {
     super('Tài khoản chưa xác thực 😡!');
+  }
+}
+
+export class DistanceTooFarException extends BadRequestException {
+  constructor() {
+    super('Điểm đến quá xa 😡!');
   }
 }

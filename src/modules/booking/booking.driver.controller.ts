@@ -48,8 +48,11 @@ export class BookingDriverController {
   }
 
   @Patch(':id/reject')
-  async rejectBooking(@CurrentAcc() account: Account, @Param('id') id: number) {
-    await this.bookingService.rejectBooking(account, id);
+  async rejectBooking(
+    @CurrentAcc('id') driverId: number,
+    @Param('id') id: number,
+  ) {
+    await this.bookingService.rejectBooking(driverId, id);
     this.bookingGateway.newPendingBooking(id);
   }
 

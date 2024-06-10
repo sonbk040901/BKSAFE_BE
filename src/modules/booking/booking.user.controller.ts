@@ -6,7 +6,6 @@ import { FindAllDto } from './dto/find-all.dto';
 import { Account } from '~entities/account.entity';
 import { UserCtrl } from '~decors/controller/controller.decorator';
 import { BookingGateway } from '@booking/booking.gateway';
-import { Booking } from '~entities/booking.entity';
 import { RatingDto } from '@booking/dto/rating.dto';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -23,18 +22,16 @@ export class BookingUserController {
     @Body() createBookingDto: CreateBookingDto,
     @CurrentAcc('id') userId: number,
   ) {
-    const bookingOrSuggest = await this.bookingService.create(
-      createBookingDto,
-      userId,
-    );
-    if (bookingOrSuggest instanceof Booking) {
-      this.bookingGateway.updateBooking(userId, bookingOrSuggest.id);
-      this.bookingGateway.newPendingBooking(bookingOrSuggest.id);
-      return bookingOrSuggest;
+    const booking = await this.bookingService.create(createBookingDto, userId);
+    const bookingId = booking.id;
+    if (!this.bookingService.getAutoFindDriver()) {
+      this.bookingGateway.updateBooking(userId, bookingId);
+      this.bookingGateway.newPendingBooking(bookingId);
+      return booking;
     }
-    this.bookingGateway.updateBooking(userId, bookingOrSuggest.bookingId);
-    this.bookingGateway.newAcceptedBooking(bookingOrSuggest.bookingId);
-    return bookingOrSuggest;
+    this.bookingGateway.updateBooking(userId, bookingId);
+    this.bookingGateway.newAcceptedBooking(bookingId);
+    return booking;
   }
 
   @Get()
