@@ -1,13 +1,8 @@
-import { Column, Entity, JoinColumn } from 'typeorm';
-import { BaseEntity } from '~entities/baseEntity';
-import { Account } from '~entities/account.entity';
+import { Column, Entity } from 'typeorm';
+import { BaseEntity } from '~entities/base.entity';
 
-@Entity('notification')
-export class NotificationEntity extends BaseEntity {
-  @Column()
-  ownerId: number;
-  @JoinColumn({ name: 'owner_id' })
-  owner: Account;
+@Entity('notifications')
+export class Notification extends BaseEntity {
   @Column()
   title: string;
   @Column()

@@ -9,7 +9,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('driver/bookings')
 @DriverCtrl('bookings')
-export class DriverBookingController {
+export class BookingDriverController {
   constructor(
     private bookingService: BookingService,
     private bookingGateway: BookingGateway,

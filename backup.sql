@@ -1,23 +1,5 @@
-DELIMITER $$
-DROP PROCEDURE IF EXISTS `create_account` $$
-CREATE PROCEDURE `create_account`(IN `username` VARCHAR(255), IN `password` VARCHAR(255),
-                                  IN `email` VARCHAR(255),
-                                  IN `full_name` VARCHAR(255), IN `phone` VARCHAR(255),
-                                  IN `avatar` VARCHAR(255), IN `role` VARCHAR(255),
-                                  OUT `account_id` INT
-)
-BEGIN
-    INSERT INTO accounts (username, password, email, full_name, phone, avatar)
-    VALUES (username, password, email, full_name, phone, avatar);
-    SET @account_id = LAST_INSERT_ID();
-    INSERT INTO account_roles (account_id, role_id)
-    VALUES (@account_id, (SELECT id FROM roles WHERE name = role));
-    SET account_id = @account_id;
-END;
+DELIMITER
 $$
-DELIMITER ;
-
-DELIMITER $$
 DROP PROCEDURE IF EXISTS `create_driver` $$
 CREATE PROCEDURE `create_driver`(IN `username` VARCHAR(255), IN `password` VARCHAR(255),
                                  IN `email` VARCHAR(255),
@@ -30,30 +12,14 @@ CREATE PROCEDURE `create_driver`(IN `username` VARCHAR(255), IN `password` VARCH
                                  IN `location_latitude` FLOAT
 )
 BEGIN
-    DECLARE account_id INT;
-    START TRANSACTION;
-    CALL create_account(username, password, email, full_name, phone, avatar, 'driver', account_id);
-    INSERT INTO drivers (id, birthday, address, status, location_address, location_longitude, location_latitude)
-    VALUES (account_id, birthday, address, status, location_address, location_longitude, location_latitude);
-    COMMIT;
-END;
-$$
-DELIMITER ;
-
-DELIMITER $$
-DROP PROCEDURE IF EXISTS `create_user` $$
-CREATE PROCEDURE `create_user`(IN `username` VARCHAR(255), IN `password` VARCHAR(255),
-                               IN `email` VARCHAR(255),
-                               IN `full_name` VARCHAR(255), IN `phone` VARCHAR(255),
-                               IN `avatar` VARCHAR(255)
-)
-BEGIN
-    DECLARE account_id INT;
-    START TRANSACTION;
-    CALL create_account(username, password, email, full_name, phone, avatar, 'user', account_id);
-    INSERT INTO users (id)
-    VALUES (account_id);
-    COMMIT;
+    DECLARE
+account_id INT;
+START TRANSACTION;
+INSERT INTO drivers (username, password, email, full_name, phone, avatar, birthday,
+                     address, status, location_address, location_longitude, location_latitude)
+VALUES (username, password, email, full_name, phone, avatar, birthday,
+        address, status, location_address, location_longitude, location_latitude);
+COMMIT;
 END;
 $$
 DELIMITER ;

@@ -6,10 +6,11 @@ import { BookingStatus } from '~/entities/booking.entity';
 import { Driver } from '~/entities/driver.entity';
 
 @WebSocketGateway({ cors: '*', namespace: 'booking' })
-export class BookingGateway extends BaseGateway<AuthService> {
+export class BookingGateway extends BaseGateway {
   constructor(authService: AuthService) {
     super(authService);
   }
+
   updateBookingStatus(userId: number, status: BookingStatus) {
     this.server.to(userId.toString()).emit('current-status', status);
   }

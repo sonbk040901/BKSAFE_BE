@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { instanceToPlain } from 'class-transformer';
 import { PagingResponseDto } from '~/common/dto/paging-response.dto';
 import { Booking } from '~entities/booking.entity';
-import { ActivateStatus, DriverStatus } from '~entities/driver.entity';
+import { DriverStatus, RegisterStatus } from '~entities/driver.entity';
 import { DriverNotFoundException } from '~exceptions/httpException';
 import { BookingRepository } from '~repos/booking.repository';
 import { DriverRepository } from '~repos/driver.repository';
@@ -12,6 +11,9 @@ import { FindAllDto } from './dto/find-all.dto';
 import { UpdateDriverLocationDto } from './dto/update-driver-location.dto';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
+import { ActionDriverDto } from '@driver/dto/action-driver.dto';
+import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
+import { ActivateStatus } from '~entities/account.entity';
 
 @Injectable()
 export class DriverService {
@@ -19,6 +21,7 @@ export class DriverService {
     private distanceService: DistanceService,
     private driverRepository: DriverRepository,
     private bookingRepository: BookingRepository,
+    private statisticRepository: MatchingStatisticRepository,
   ) {}
 
   async create(createDriverDto: CreateDriverDto) {
@@ -70,33 +73,40 @@ export class DriverService {
 
   async findAll(findAllDto: FindAllDto) {
     const [drivers, count] = await this.driverRepository.findAll(findAllDto, [
-      'account',
       'license',
       'matchingStatistic',
     ]);
-    const driverAccounts = drivers.map((driver) =>
-      Object.assign(driver, instanceToPlain(driver.account)),
-    );
-    return new PagingResponseDto(driverAccounts, count, findAllDto);
+    return new PagingResponseDto(drivers, count, findAllDto);
   }
 
   async statistic() {
-    const statusResult: {
+    const statusResult = await this.driverRepository.query<{
       total: string;
       status: DriverStatus;
-    }[] = await this.driverRepository.query(
-      'SELECT COUNT(*) as total, status FROM drivers GROUP BY status',
+    }>('SELECT COUNT(*) as total, status FROM drivers GROUP BY status');
+    const registerStatusResult = await this.driverRepository.query<{
+      total: number;
+      registerStatus: RegisterStatus;
+    }>(
+      'SELECT COUNT(*) as total, register_status registerStatus FROM drivers GROUP BY registerStatus',
     );
-    const activateStatusResult: {
+    const activateStatusResult = await this.driverRepository.query<{
       total: number;
       activateStatus: ActivateStatus;
-    }[] = await this.driverRepository.query(
-      'SELECT COUNT(*) as total, activate_status activateStatus FROM drivers GROUP BY activate_status',
+    }>(
+      'SELECT COUNT(*) as total, activate_status activateStatus FROM drivers GROUP BY activateStatus',
     );
     const status = statusResult.reduce((acc, { total, status }) => {
       acc[status] = +total;
       return acc;
     }, {});
+    const registerStatus = registerStatusResult.reduce(
+      (acc, { total, registerStatus }) => {
+        acc[registerStatus] = +total;
+        return acc;
+      },
+      {},
+    );
     const activateStatus = activateStatusResult.reduce(
       (acc, { total, activateStatus }) => {
         acc[activateStatus] = +total;
@@ -107,6 +117,7 @@ export class DriverService {
     return {
       total: statusResult.reduce((acc, { total }) => +total + acc, 0),
       status,
+      registerStatus,
       activateStatus,
     };
   }
@@ -121,5 +132,18 @@ export class DriverService {
 
   remove(id: number) {
     return `This action removes a #${id} driver`;
+  }
+
+  async action(activeDriverDto: ActionDriverDto) {
+    const { phone, status } = activeDriverDto;
+    const driver = await this.driverRepository.findOneByPhone(phone);
+    if (!driver) throw new DriverNotFoundException();
+    if (!driver.isActivated()) throw new DriverNotFoundException();
+    if (driver.registerStatus === status) return;
+    driver.registerStatus = status;
+    if (driver.isRegisterStatusAccepted()) {
+      driver.matchingStatistic = this.statisticRepository.create();
+    }
+    await this.driverRepository.save(driver);
   }
 }

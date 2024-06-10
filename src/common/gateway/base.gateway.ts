@@ -3,20 +3,18 @@ import {
   OnGatewayDisconnect,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Socket, Namespace } from 'socket.io';
-import { Account } from '~entities/account.entity';
+import { Namespace, Socket } from 'socket.io';
 import { UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from '~guards/ws-jwt.guard';
+import { IAuthVerify } from '~interfaces/auth-verify.interface';
 
 @UseGuards(WsJwtGuard)
-export class BaseGateway<
-    T extends { verify: (token: string) => Promise<Account> },
-  >
+export class BaseGateway
   implements OnGatewayConnection<Socket>, OnGatewayDisconnect<Socket>
 {
   @WebSocketServer() server: Namespace;
 
-  constructor(protected authService: T) {}
+  constructor(protected authService: IAuthVerify) {}
 
   handleDisconnect(client: Socket) {
     console.log(`disconnected ${client.nsp.name}`);
@@ -31,7 +29,7 @@ export class BaseGateway<
     client.data.user = await this.authService
       .verify(authToken)
       .then((user) => {
-        const isAdmin = user.roles.find((role) => role.name === 'admin');
+        const isAdmin = user.getRole() === 'ADMIN';
         if (isAdmin) {
           console.log('admin join');
           client.join('admin');

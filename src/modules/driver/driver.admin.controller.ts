@@ -5,10 +5,11 @@ import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { FindAllDto } from './dto/find-all.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { ActionDriverDto } from "@driver/dto/action-driver.dto";
 
 @ApiTags('admin/drivers')
 @AdminCtrl('drivers')
-export class AdminDriverController {
+export class DriverAdminController {
   constructor(private readonly driverService: DriverService) {}
 
   @Post()
@@ -40,5 +41,10 @@ export class AdminDriverController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.driverService.remove(+id);
+  }
+
+  @Patch(':id/action')
+  async activeDriver(@Body() activeDriverDto: ActionDriverDto) {
+    return this.driverService.action(activeDriverDto);
   }
 }

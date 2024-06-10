@@ -1,19 +1,11 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
-import { BaseEntity } from './baseEntity';
-import { Account } from './account.entity';
-import { Location } from './location.entity';
-import { Transform } from 'class-transformer';
-import { Note } from '~entities/note.entity';
-import { BookingSuggestDriver } from '~entities/booking-suggest-driver.entity';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne } from "typeorm";
+import { BaseEntity } from "./base.entity";
+import { Location } from "./location.entity";
+import { Transform } from "class-transformer";
+import { Note } from "~entities/note.entity";
+import { BookingSuggestDriver } from "~entities/booking-suggest-driver.entity";
+import { User } from "~entities/user.entity";
+import { Driver } from "~entities/driver.entity";
 
 /**
  * * `PENDING`: Chờ xác nhận (đang chờ admin xác nhận)
@@ -68,12 +60,12 @@ export class Booking extends BaseEntity {
     inverseJoinColumn: { name: 'note_id' },
   })
   notes: Note[];
-  @ManyToOne(() => Account)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: Account | null;
-  @ManyToOne(() => Account)
+  user: User | null;
+  @ManyToOne(() => Driver)
   @JoinColumn({ name: 'driver_id' })
-  driver: Account | null;
+  driver: Driver | null;
   @OneToOne(() => BookingSuggestDriver, (target) => target.booking, {
     cascade: ['insert', 'update'],
   })

@@ -6,7 +6,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('user/drivers')
 @UserCtrl('drivers')
-export class UserDriverController {
+export class DriverUserController {
   constructor(private readonly driverService: DriverService) {}
 
   @Post('')

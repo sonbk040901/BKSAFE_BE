@@ -23,8 +23,8 @@ export class BookingRepository extends Repository<Booking> {
     });
   }
 
-  async findRecentByUserId(userId: number) {
-    const bookings = await this.find({
+  findRecentByUserId(userId: number) {
+    return this.find({
       where: {
         userId,
         status: Raw((alias) => `${alias} not in (:...status)`, {
@@ -33,14 +33,7 @@ export class BookingRepository extends Repository<Booking> {
       },
       order: { createdAt: 'DESC' },
       take: 2,
-      relations: ['locations', 'notes', 'driver', 'driver.driver'],
-    });
-    return bookings.map((booking) => {
-      if (booking.driver) {
-        booking.driver = Object.assign(booking.driver, booking.driver.driver);
-        delete booking.driver.driver;
-      }
-      return booking;
+      relations: ['locations', 'notes', 'driver'],
     });
   }
 

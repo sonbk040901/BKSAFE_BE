@@ -1,10 +1,18 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  OneToOne,
+} from 'typeorm';
 import { Account } from './account.entity';
-import { BaseEntity } from './baseEntity';
 import { License } from './license.entity';
 import { MatchingStatistic } from '~entities/matching-statistic.entity';
 import { Exclude, Transform } from 'class-transformer';
 import { BookingSuggestDriver } from '~entities/booking-suggest-driver.entity';
+import { RoleName } from '~/common/enums/role-name.enum';
+import { Notification } from '~entities/noti.entity';
 
 export enum DriverStatus {
   AVAILABLE = 'AVAILABLE',
@@ -12,9 +20,9 @@ export enum DriverStatus {
   OFFLINE = 'OFFLINE',
 }
 
-export enum ActivateStatus {
-  ACTIVATED = 'ACTIVATED',
-  DEACTIVATED = 'DEACTIVATED',
+export enum RegisterStatus {
+  PENDING = 'PENDING',
+  ACCEPTED = 'ACCEPTED',
   REJECTED = 'REJECTED',
 }
 
@@ -30,17 +38,13 @@ export class Location {
 }
 
 @Entity('drivers')
-export class Driver extends BaseEntity {
+export class Driver extends Account {
   @Column({ nullable: true })
   birthday: Date;
   @Column({ nullable: true })
   address: string;
   @Column({ type: 'float', default: 5 })
   rating: number;
-  @OneToOne(() => Account, { cascade: ['insert', 'update'] })
-  @JoinColumn({ name: 'id' })
-  @Exclude()
-  account: Account;
   @Column({ type: 'enum', enum: DriverStatus, default: DriverStatus.OFFLINE })
   status: DriverStatus;
   @OneToOne(() => License, { cascade: ['insert'] })
@@ -57,10 +61,25 @@ export class Driver extends BaseEntity {
   matchingStatistic: MatchingStatistic;
   @Column({
     type: 'enum',
-    enum: ActivateStatus,
-    default: ActivateStatus.DEACTIVATED,
+    enum: RegisterStatus,
+    default: RegisterStatus.PENDING,
   })
-  activateStatus: ActivateStatus;
+  registerStatus: RegisterStatus;
   @OneToOne(() => BookingSuggestDriver, (target) => target.driver)
   bookingSuggestDriver: BookingSuggestDriver;
+  @ManyToMany(() => Notification)
+  @JoinTable({
+    name: 'driver_notifications',
+    joinColumn: { name: 'driver_id' },
+    inverseJoinColumn: { name: 'notification_id' },
+  })
+  notifications: Notification[];
+
+  isRegisterStatusAccepted(): boolean {
+    return this.registerStatus === RegisterStatus.ACCEPTED;
+  }
+
+  getRole(): RoleName {
+    return RoleName.DRIVER;
+  }
 }

@@ -4,7 +4,7 @@ import { Get, Query } from '@nestjs/common';
 import { FindAllDto } from './dto/find-all.dto';
 import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('users')
+@ApiTags('admin/users')
 @AdminCtrl('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}

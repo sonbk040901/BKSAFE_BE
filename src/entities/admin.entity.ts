@@ -1,14 +1,10 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
-import { BaseEntity } from './baseEntity';
-import { Account } from './account.entity';
-import { Exclude } from 'class-transformer';
+import { Entity } from 'typeorm';
+import { Account } from '~entities/account.entity';
+import { RoleName } from '~/common/enums/role-name.enum';
 
 @Entity('admins')
-export class Admin extends BaseEntity {
-  @OneToOne(() => Account, { cascade: ['insert', 'update'] })
-  @JoinColumn({ name: 'id' })
-  account: Account;
-  @Exclude()
-  @Column({ default: false })
-  isActivated: boolean;
+export class Admin extends Account {
+  getRole(): RoleName {
+    return RoleName.ADMIN;
+  }
 }

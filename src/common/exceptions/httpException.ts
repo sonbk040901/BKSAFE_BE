@@ -6,55 +6,65 @@ import {
 
 export class PhoneOrPasswordIncorrectException extends UnauthorizedException {
   constructor() {
-    super('Phone or password is incorrect 🤕!');
+    super('Số điện thoại hoặc mật khẩu không chính xác 🤕!');
   }
 }
 
-export class PasswordIncorrectForAlreadyEmailException extends UnauthorizedException {
+export class PasswordIncorrectForAlreadyPhoneException extends UnauthorizedException {
   constructor() {
-    super('Password is incorrect for already email 🤕!');
+    super('Mật khẩu không khớp với tài khoản người dùng 🤕!');
   }
 }
 
 export class PhoneNumberAlreadyExistsException extends ConflictException {
   constructor(phone: string) {
-    super(`Phone ${phone} already exists 🤯!`);
+    super(`Số điện thoại ${phone} đã tồn tại 🤯!`);
   }
 }
 
 export class DriverAlreadyExistsException extends ConflictException {
   constructor(phone: string) {
-    super(`Driver ${phone} already exists 😡!`);
+    super(`Tài xế ${phone} đã tồn tại 😡!`);
   }
 }
 
 export class DriverRegisterIsPending extends ConflictException {
   constructor(phone: string) {
-    super(`Driver register for ${phone} is pending 😡!`);
+    super(
+      `Đơn đăng ký làm tài xế cho số điện thoại ${phone} đang chờ xử lý 😡!`,
+    );
+  }
+}
+
+export class DriverRegisterIsAlreadyAccepted extends ConflictException {
+  constructor(phone: string) {
+    super(
+      `Đơn đăng ký làm tài xế cho số điện thoại ${phone} đã được duyệt 😡!`,
+    );
   }
 }
 
 export class NotCompletedBookingAlreadyExistsException extends ConflictException {
   constructor() {
-    super('You have a booking not completed 😡!');
+    super('Bạn vẫn còn một chuyến đi chưa hoàn thành 😡!');
   }
 }
 
 export class BookingNotFoundException extends NotFoundException {
   constructor() {
-    super('Booking not found 🧐!');
+    super('Không tìm thấy chuyến đi🧐!');
   }
 }
 
 export class DriverNotFoundException extends NotFoundException {
   constructor() {
-    super('Driver not found 🧐!');
+    super('Tài xế không tồn tại🧐!');
   }
 }
 
 export class AccessDeniedException extends UnauthorizedException {
   constructor() {
-    super('Access denied 🛑!');
+    super('Không được phép truy cập🛑!');
   }
 }
 
@@ -66,36 +76,36 @@ export class JwtTokenExpiredException extends UnauthorizedException {
 
 export class JwtTokenInvalidException extends UnauthorizedException {
   constructor() {
-    super('Token invalid');
+    super('Token không hợp lệ');
   }
 }
 
 export class ActivationIncorrectWrongException extends UnauthorizedException {
   constructor() {
-    super('Activation code is incorrect 🤕!');
+    super('Sai mã xác thực 🤕!');
   }
 }
 
 export class UserAlreadyActivatedException extends ConflictException {
   constructor() {
-    super('User already activated 😡!');
+    super('Tài khoản người dùng đã kích hoạt 😡!');
   }
 }
 
 export class DriverAlreadyActivatedException extends ConflictException {
   constructor() {
-    super('Driver already activated 😡!');
+    super('Tài khoản tài xế đã kích hoạt 😡!');
   }
 }
 
 export class UserNotFoundException extends NotFoundException {
   constructor() {
-    super('User not found 🧐!');
+    super('Người dùng không tồn tại 🧐!');
   }
 }
 
 export class AccountNotActivatedException extends ConflictException {
   constructor() {
-    super('Account not activated 😡!');
+    super('Tài khoản chưa xác thực 😡!');
   }
 }

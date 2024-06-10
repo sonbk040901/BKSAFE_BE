@@ -7,7 +7,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('map')
 @UserCtrl('map')
-export class MapController {
+export class MapUserController {
   constructor(private readonly mapService: MapService) {}
 
   @Get('drivers')

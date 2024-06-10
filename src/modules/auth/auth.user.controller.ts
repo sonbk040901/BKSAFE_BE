@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Patch,
-  Post,
-  Res,
-} from '@nestjs/common';
+import { Body, Get, HttpCode, Patch, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { Permit } from '~decors/meta/permit.decorator';
@@ -14,52 +6,30 @@ import { CurrentAcc } from '~decors/param/current-account.decorator';
 import { Account } from '~entities/account.entity';
 import { LoginDto } from './dto/login.dto';
 import { Roles } from '~decors/meta/roles.decorator';
-import { RegisterDriverDto } from '@auth/dto/register-driver.dto';
 import { RegisterDriverByUserDto } from '@auth/dto/register-driver-by-user.dto';
 import { Response } from 'express';
 import { ActiveUserDto } from '@auth/dto/active-user.dto';
-import { ActionDriverDto } from '@auth/dto/action-driver.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { UserCtrl } from '~decors/controller/controller.decorator';
 
-@ApiTags('auth')
-@Controller('auth')
-export class AuthController {
+@ApiTags('user/auth')
+@UserCtrl('auth')
+export class AuthUserController {
   constructor(private readonly authService: AuthService) {}
 
-  @Get(['', 'user-info'])
-  @Roles('user')
+  @Get()
   getInfo(@CurrentAcc() account: Account) {
     return account;
   }
 
-  @Get('driver-info')
-  @Roles('driver')
-  getInfoDriver(@CurrentAcc() account: Account) {
-    return account;
-  }
-
-  @Get('admin-info')
-  @Roles('admin')
-  getInfoAdmin(@CurrentAcc() account: Account) {
-    return account;
-  }
-
-  // Api để đăng ký tài khoản cho user nếu chưa có tài khoản user
   @Permit()
   @Post('register')
   register(@Body() register: RegisterDto) {
     return this.authService.register(register);
   }
 
-  // Api để đăng ký tài khoản cho tài xế nếu chưa có tài khoản user
-  @Permit()
+  // Api để đăng ký tài khoản cho tài xế nếu đã có tài khoản người dùng
   @Post('register/driver')
-  registerDriver(@Body() register: RegisterDriverDto) {
-    return this.authService.registerDriver(register);
-  }
-
-  // Api để đăng ký tài khoản cho tài xế nếu chưa có tài khoản user
-  @Post('user/register/driver')
   @Roles('user')
   registerDriverByUser(
     @CurrentAcc() userAccount: Account,
@@ -88,12 +58,6 @@ export class AuthController {
   @Permit()
   @Patch('active')
   async activeUser(@Body() activeUserDto: ActiveUserDto) {
-    return this.authService.activeUser(activeUserDto);
-  }
-
-  @Roles('admin')
-  @Patch('action/driver')
-  async activeDriver(@Body() activeDriverDto: ActionDriverDto) {
-    return this.authService.activeDriver(activeDriverDto);
+    return this.authService.active(activeUserDto);
   }
 }

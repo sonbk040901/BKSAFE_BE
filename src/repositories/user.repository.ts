@@ -1,23 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { User } from '~entities/user.entity';
+import { AccountRepository } from '~repos/account.repository';
 
 @Injectable()
-export class UserRepository extends Repository<User> {
+export class UserRepository extends AccountRepository<User> {
   constructor(dataSource: DataSource) {
-    super(
-      User,
-      dataSource.createEntityManager(),
-      dataSource.createQueryRunner(),
-    );
-  }
-
-  async findOneByPhone(phone: string) {
-    return this.createQueryBuilder('user')
-      .innerJoinAndSelect('user.account', 'account')
-      .leftJoinAndSelect('account.roles', 'roles')
-      .where('account.phone = :phone', { phone })
-      .getOne();
+    super(User, dataSource);
   }
 
   async findOneByPhoneAndIsActivated(phone: string) {

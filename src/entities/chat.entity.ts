@@ -1,6 +1,7 @@
-import { BaseEntity } from '~entities/baseEntity';
+import { BaseEntity } from '~entities/base.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Account } from '~entities/account.entity';
+import { User } from '~entities/user.entity';
+import { Driver } from '~entities/driver.entity';
 
 @Entity('chats')
 export class Chat extends BaseEntity {
@@ -10,9 +11,10 @@ export class Chat extends BaseEntity {
   driverId: number;
   @Column()
   message: string;
-  @ManyToOne(() => Account)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: Account;
+  user: User;
+  @ManyToOne(() => Driver)
   @JoinColumn({ name: 'driver_id' })
-  driver: Account;
+  driver: Driver;
 }

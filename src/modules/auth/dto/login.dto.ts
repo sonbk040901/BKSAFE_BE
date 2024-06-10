@@ -1,6 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsPhoneNumber } from 'class-validator';
-import { Transform } from 'class-transformer';
-import { RoleName } from '~/common/enums/role-name.enum';
+import { IsNotEmpty, IsPhoneNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
@@ -10,8 +8,4 @@ export class LoginDto {
   @ApiProperty({ default: '123456' })
   @IsNotEmpty()
   password: string;
-  @IsOptional()
-  @IsEnum(RoleName)
-  @Transform(({ value }) => value.toUpperCase())
-  role: RoleName = RoleName.USER;
 }

@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { DriverService } from './driver.service';
-import { DriverDriverController } from './driver-driver.controller';
-import { UserDriverController } from '@driver/user-driver.controller';
-import { AdminDriverController } from '@driver/admin-driver.controller';
+import { DriverDriverController } from './driver.driver.controller';
+import { DriverUserController } from '@driver/driver.user.controller';
+import { DriverAdminController } from '@driver/driver.admin.controller';
 import { DriverGateway } from './driver.gateway';
 import { AuthModule } from '@auth/auth.module';
 import { UtilsModule } from '~utils/utils.module';
@@ -10,9 +10,9 @@ import { UtilsModule } from '~utils/utils.module';
 @Module({
   imports: [AuthModule, UtilsModule],
   controllers: [
-    AdminDriverController,
+    DriverAdminController,
     DriverDriverController,
-    UserDriverController,
+    DriverUserController,
   ],
   providers: [DriverService, DriverGateway],
 })

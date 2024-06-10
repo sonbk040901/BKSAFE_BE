@@ -1,18 +1,23 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
-import { BaseEntity } from './baseEntity';
+import { Entity, JoinColumn, JoinTable, ManyToMany, OneToOne } from 'typeorm';
 import { Car } from './car.entity';
 import { Account } from './account.entity';
-import { Exclude } from 'class-transformer';
+import { RoleName } from '~/common/enums/role-name.enum';
+import { Notification } from '~entities/noti.entity';
 
 @Entity('users')
-export class User extends BaseEntity {
-  @OneToOne(() => Account, { cascade: ['insert', 'update'] })
-  @JoinColumn({ name: 'id' })
-  account: Account;
+export class User extends Account {
   @OneToOne(() => Car, { cascade: ['insert'] })
   @JoinColumn({ name: 'car_id' })
   car: Car;
-  @Exclude()
-  @Column({ default: false })
-  isActivated: boolean;
+  @ManyToMany(() => Notification)
+  @JoinTable({
+    name: 'user_notifications',
+    joinColumn: { name: 'user_id' },
+    inverseJoinColumn: { name: 'notification_id' },
+  })
+  notifications: Notification[];
+
+  getRole(): RoleName {
+    return RoleName.USER;
+  }
 }

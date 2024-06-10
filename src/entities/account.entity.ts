@@ -1,9 +1,9 @@
-import { Column, Entity, JoinTable, ManyToMany, OneToOne } from 'typeorm';
-import { BaseEntity } from './baseEntity';
-import { Role } from './role.entity';
+import { Column } from 'typeorm';
+import { BaseEntity } from './base.entity';
 import { Exclude } from 'class-transformer';
-import { Driver } from '~entities/driver.entity';
+import { RoleName } from '~/common/enums/role-name.enum';
 import { User } from '~entities/user.entity';
+import { Driver } from '~entities/driver.entity';
 import { Admin } from '~entities/admin.entity';
 
 export enum Gender {
@@ -12,8 +12,13 @@ export enum Gender {
   OTHER = 'OTHER',
 }
 
-@Entity('accounts')
-export class Account extends BaseEntity {
+export enum ActivateStatus {
+  DEACTIVATED = 'DEACTIVATED',
+  ACTIVATED = 'ACTIVATED',
+  BLOCKED = 'BLOCKED',
+}
+
+export abstract class Account extends BaseEntity {
   @Column()
   username: string;
   @Column()
@@ -29,30 +34,36 @@ export class Account extends BaseEntity {
   avatar: string;
   @Column({ type: 'enum', enum: Gender, default: Gender.OTHER })
   gender: Gender;
-  @ManyToMany(() => Role, { nullable: false })
-  @JoinTable({
-    name: 'account_roles',
-    joinColumn: { name: 'account_id' },
-    inverseJoinColumn: { name: 'role_id' },
+  @Column({
+    type: 'enum',
+    enum: ActivateStatus,
+    default: ActivateStatus.DEACTIVATED,
   })
-  @Exclude()
-  roles: Role[];
-  @OneToOne(() => Driver, (driver) => driver.account, { cascade: false })
-  driver?: Driver;
-  @OneToOne(() => User, (user) => user.account, { cascade: false })
-  user?: User;
-  @OneToOne(() => Admin, (admin) => admin.account, { cascade: false })
-  admin?: Admin;
+  activateStatus: ActivateStatus;
 
-  isActivatedUser(): this is Account & { user: User } {
-    return this.roles?.some((role) => role.name === 'user');
+  isActivated(): boolean {
+    return this.activateStatus === ActivateStatus.ACTIVATED;
   }
 
-  isActivatedDriver(): this is Account & { driver: Driver } {
-    return this.roles?.some((role) => role.name === 'driver');
+  isPending(): boolean {
+    return this.activateStatus === ActivateStatus.DEACTIVATED;
   }
 
-  isActivatedAdmin(): this is Account & { admin: Admin } {
-    return this.roles?.some((role) => role.name === 'admin');
+  isBlocked(): boolean {
+    return this.activateStatus === ActivateStatus.BLOCKED;
+  }
+
+  abstract getRole(): RoleName;
+
+  isUser(): this is User {
+    return this.getRole() === RoleName.USER;
+  }
+
+  isDriver(): this is Driver {
+    return this.getRole() === RoleName.DRIVER;
+  }
+
+  isAdmin(): this is Admin {
+    return this.getRole() === RoleName.ADMIN;
   }
 }

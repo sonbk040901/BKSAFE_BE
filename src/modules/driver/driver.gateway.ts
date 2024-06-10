@@ -13,7 +13,7 @@ import { DriverService } from '@driver/driver.service';
 import { CurrentAcc } from '~/common/decorators/param/current-account.decorator';
 
 @WebSocketGateway({ cors: '*', namespace: 'driver' })
-export class DriverGateway extends BaseGateway<AuthService> {
+export class DriverGateway extends BaseGateway {
   constructor(
     authService: AuthService,
     private driverService: DriverService,

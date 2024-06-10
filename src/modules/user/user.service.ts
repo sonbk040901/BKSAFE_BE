@@ -1,16 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PagingResponseDto } from '~/common/dto/paging-response.dto';
-import { AccountRepository } from '~/repositories/account.repository';
 import { UserRepository } from '~/repositories/user.repository';
 import { FindAllDto } from './dto/find-all.dto';
-import { instanceToPlain } from 'class-transformer';
+import { StatisticResponseDto } from './dto/statistic-response.dto';
+import { IStatisticRecord } from './interfaces/statistic.interface';
 
 @Injectable()
 export class UserService {
-  constructor(
-    private userRepository: UserRepository,
-    private accountRepository: AccountRepository,
-  ) {}
+  constructor(private userRepository: UserRepository) {}
 
   async findAll(findAllDto: FindAllDto) {
     const [users, count] = await this.userRepository.findAndCount({
@@ -18,26 +15,15 @@ export class UserService {
       skip: findAllDto.skip,
       take: findAllDto.take,
       order: { [findAllDto.sort]: findAllDto.order },
-      relations: ['account', 'car'],
+      relations: ['car'],
     });
-    const usersWithAccount = users.map((user) => {
-      const { account, ...rest } = user;
-      const accountPlain = instanceToPlain(account);
-      Object.assign(rest, accountPlain);
-      return rest;
-    });
-    return new PagingResponseDto(usersWithAccount, count, findAllDto);
+    return new PagingResponseDto(users, count, findAllDto);
   }
 
   async getStatistic() {
-    const results: { isActivated: boolean; count: string }[] =
-      await this.userRepository.query(
-        'select count(*) as count, is_activated isActivated from users u inner join accounts a on u.id = a.id group by is_activated;',
-      );
-    return {
-      active: +(results.find((result) => result.isActivated)?.count || 0),
-      inactive: +(results.find((result) => !result.isActivated)?.count || 0),
-      total: results.reduce((acc, cur) => +cur.count + acc, 0),
-    };
+    const results = await this.userRepository.query<IStatisticRecord>(
+      'select count(*) as count, activate_status activateStatus from users u group by activateStatus',
+    );
+    return new StatisticResponseDto(results);
   }
 }

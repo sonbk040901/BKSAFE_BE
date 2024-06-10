@@ -9,10 +9,18 @@ import { AuthPayload } from '@auth/interfaces/auth-payload.interface';
 import { AccountRepository } from '~repos/account.repository';
 import { JwtTokenInvalidException } from '~/common/exceptions/httpException';
 import { Account } from '~entities/account.entity';
+import { UserRepository } from '~repos/user.repository';
+import { DriverRepository } from '~repos/driver.repository';
+import { AdminRepository } from '~repos/admin.repository';
+import { RoleName } from '~/common/enums/role-name.enum';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private accountRepository: AccountRepository) {
+  constructor(
+    private userRepository: UserRepository,
+    private driverRepository: DriverRepository,
+    private adminRepository: AdminRepository,
+  ) {
     const opt: StrategyOptionsWithoutRequest = {
       secretOrKey: process.env.JWT_SECRET!,
       jwtFromRequest: ExtractJwt.fromExtractors([
@@ -23,9 +31,22 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super(opt);
   }
 
+  protected getAccountRepository(role?: RoleName): AccountRepository {
+    switch (role) {
+      case 'USER':
+        return this.userRepository;
+      case 'DRIVER':
+        return this.driverRepository;
+      default:
+        return this.adminRepository;
+    }
+  }
+
   async validate(authPayload: AuthPayload): Promise<Account> {
-    const { id } = authPayload;
-    const account = await this.accountRepository.findById(id, ['roles']);
+    const { id, role } = authPayload;
+    const account = await this.getAccountRepository(role).findOne({
+      where: { id },
+    });
     if (!account) {
       throw new JwtTokenInvalidException();
     }

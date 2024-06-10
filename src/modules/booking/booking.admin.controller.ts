@@ -10,7 +10,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('admin/bookings')
 @AdminCtrl('bookings')
-export class AdminBookingController {
+export class BookingAdminController {
   constructor(
     private readonly bookingService: BookingService,
     private readonly bookingGateway: BookingGateway,

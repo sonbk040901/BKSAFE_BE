@@ -245,9 +245,7 @@ export class BookingService {
         acceptCount: matchingStatistic?.accept ?? 0,
       };
       driver['priority'] = this.driverPriorityService.calculate(options);
-      const account = instanceToPlain(driver.account);
       Object.assign(driver, options);
-      Object.assign(driver, account);
       suggestDrivers.push(driver);
     });
     return suggestDrivers.sort((d1, d2) => d2['priority'] - d1['priority']);

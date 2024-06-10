@@ -12,7 +12,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('user/bookings')
 @UserCtrl('bookings')
-export class UserBookingController {
+export class BookingUserController {
   constructor(
     private readonly bookingService: BookingService,
     private readonly bookingGateway: BookingGateway,

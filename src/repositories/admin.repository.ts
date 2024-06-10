@@ -1,29 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { Admin } from '~entities/admin.entity';
+import { AccountRepository } from '~repos/account.repository';
 
 @Injectable()
-export class AdminRepository extends Repository<Admin> {
+export class AdminRepository extends AccountRepository<Admin> {
   constructor(dataSource: DataSource) {
-    super(
-      Admin,
-      dataSource.createEntityManager(),
-      dataSource.createQueryRunner(),
-    );
-  }
-
-  async findOneByPhoneAndIsActivated(phone: string) {
-    return this.createQueryBuilder('admin')
-      .innerJoinAndSelect('admin.account', 'account')
-      .where('account.phone = :phone and admin.isActivated = true', { phone })
-      .getOne();
-  }
-
-  async findOneByPhone(phone: string) {
-    return this.createQueryBuilder('admin')
-      .innerJoinAndSelect('admin.account', 'account')
-      .leftJoinAndSelect('account.roles', 'roles')
-      .where('account.phone = :phone', { phone })
-      .getOne();
+    super(Admin, dataSource);
   }
 }

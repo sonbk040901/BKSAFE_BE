@@ -1,16 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { FindAllDto } from '~/modules/driver/dto/find-all.dto';
-import { ActivateStatus, Driver } from '~entities/driver.entity';
+import { Driver, DriverStatus, RegisterStatus } from '~entities/driver.entity';
+import { AccountRepository } from '~repos/account.repository';
 
 @Injectable()
-export class DriverRepository extends Repository<Driver> {
+export class DriverRepository extends AccountRepository<Driver> {
   constructor(dataSource: DataSource) {
-    super(
-      Driver,
-      dataSource.createEntityManager(),
-      dataSource.createQueryRunner(),
-    );
+    super(Driver, dataSource);
   }
 
   findAll(findAllDto: FindAllDto, relations?: string[]) {
@@ -28,7 +25,7 @@ export class DriverRepository extends Repository<Driver> {
   findAllAvailableDrivers(relations?: string[]) {
     return this.find({
       where: {
-        // status: DriverStatus.AVAILABLE,
+        status: DriverStatus.AVAILABLE,
       },
       relations,
     });
@@ -52,17 +49,8 @@ export class DriverRepository extends Repository<Driver> {
       .innerJoinAndSelect('account.roles', 'roles')
       .where(
         'account.phone = :phone and driver.activateStatus = :activateStatus',
-        { phone, activateStatus: ActivateStatus.ACTIVATED },
+        { phone, activateStatus: RegisterStatus.PENDING },
       )
-      .getOne();
-  }
-
-  async findOneByPhone(phone: string) {
-    return this.createQueryBuilder('driver')
-      .innerJoinAndSelect('driver.account', 'account')
-      .leftJoinAndSelect('account.roles', 'roles')
-      .leftJoinAndSelect('driver.matchingStatistic', 'matchingStatistic')
-      .where('account.phone = :phone', { phone })
       .getOne();
   }
 }
