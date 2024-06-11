@@ -3,7 +3,7 @@ import { WebSocketGateway } from '@nestjs/websockets';
 import { instanceToPlain } from 'class-transformer';
 import { BaseGateway } from '~/common/gateway/base.gateway';
 import { BookingStatus } from '~/entities/booking.entity';
-import { Driver } from '~/entities/driver.entity';
+import { Account } from '~entities/account.entity';
 
 @WebSocketGateway({ cors: '*', namespace: 'booking' })
 export class BookingGateway extends BaseGateway {
@@ -15,7 +15,7 @@ export class BookingGateway extends BaseGateway {
     this.server.to(userId.toString()).emit('current-status', status);
   }
 
-  updateBookingDriver(userId: number, driver: Driver) {
+  updateBookingDriver(userId: number, driver: Account) {
     this.server
       .to(userId.toString())
       .emit('current-driver', instanceToPlain(driver));

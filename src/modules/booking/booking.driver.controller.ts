@@ -6,6 +6,7 @@ import { FindAllDto } from '@booking/dto/find-all.dto';
 import { DriverCtrl } from '~decors/controller/controller.decorator';
 import { BookingGateway } from '@booking/booking.gateway';
 import { ApiTags } from '@nestjs/swagger';
+import { Driver } from '~entities/driver.entity';
 
 @ApiTags('driver/bookings')
 @DriverCtrl('bookings')
@@ -37,12 +38,9 @@ export class BookingDriverController {
 
   @Patch(':id/accept')
   async acceptBooking(@CurrentAcc() account: Account, @Param('id') id: number) {
-    const [booking, driver] = await this.bookingService.acceptBooking(
-      account,
-      id,
-    );
+    const booking = await this.bookingService.acceptBooking(account, id);
     this.bookingGateway.updateBooking(booking.userId, booking.id);
-    this.bookingGateway.updateBookingDriver(booking.userId, driver);
+    this.bookingGateway.updateBookingDriver(booking.userId, account);
     this.bookingGateway.updateBookingStatus(booking.userId, booking.status);
     return booking;
   }
@@ -66,7 +64,7 @@ export class BookingDriverController {
 
   @Patch(':id/complete')
   async completeBooking(
-    @CurrentAcc() account: Account,
+    @CurrentAcc() account: Driver,
     @Param('id') id: number,
   ) {
     const booking = await this.bookingService.completeBooking(account, id);

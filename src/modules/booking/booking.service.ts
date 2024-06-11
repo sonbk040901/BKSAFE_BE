@@ -1,10 +1,9 @@
 import { FindSuggestDriverDto } from '@booking/dto/find-suggest-driver.dto';
 import { Injectable } from '@nestjs/common';
-import { instanceToPlain } from 'class-transformer';
 import { PagingResponseDto } from '~dto/paging-response.dto';
 import { Account } from '~entities/account.entity';
-import { Booking, BookingStatus } from '~entities/booking.entity';
-import { Driver } from '~entities/driver.entity';
+import { BookingStatus } from '~entities/booking.entity';
+import { Driver, DriverStatus } from '~entities/driver.entity';
 import { LocationType } from '~entities/location.entity';
 import { MatchingStatistic } from '~entities/matching-statistic.entity';
 import {
@@ -163,13 +162,11 @@ export class BookingService {
     await this.updateMatchingStatistic(account.id, [
       { increase: true, field: 'accept' },
     ]);
-    const driver = await this.driverRepository.findOneOrFail({
-      where: { id: account.id },
-    });
-    return [
-      await this.bookingRepository.save(booking),
-      Object.assign(driver, instanceToPlain(account)),
-    ] as const;
+    await this.driverRepository.update(
+      { id: account.id },
+      { status: DriverStatus.BUSY },
+    );
+    return this.bookingRepository.save(booking);
   }
 
   async rejectBooking(driverId: number, bookingId: number) {
@@ -197,13 +194,10 @@ export class BookingService {
     }
   }
 
-  async suggestDriver(bookingIdOrBooking: number | Booking, driverId: number) {
-    const booking =
-      typeof bookingIdOrBooking === 'number'
-        ? await this.bookingRepository.findOneByOrFail({
-            id: bookingIdOrBooking,
-          })
-        : bookingIdOrBooking;
+  async suggestDriver(bookingId: number, driverId: number) {
+    const booking = await this.bookingRepository.findOneByOrFail({
+      id: bookingId,
+    });
     await this.bSDRepository.insert({
       bookingId: booking.id,
       driverId,
@@ -247,10 +241,11 @@ export class BookingService {
     pickup: ILocation,
     bookingId: number,
   ) {
+    // Tìm ra tài xế chưa từng được đề xuất cho booking này và đang không được đề xuất cho booking khác
     const results = await this.driverRepository
       .createQueryBuilder('d')
       .where(
-        'd.id not in (select driver_id from booking_suggest_drivers where booking_id = :id)',
+        'd.id not in (select driver_id from booking_suggest_drivers where booking_id = :id or is_rejected = 0)',
         { id: bookingId },
       )
       .leftJoinAndSelect('d.matchingStatistic', 'matchingStatistic')
@@ -309,27 +304,28 @@ export class BookingService {
     return bsd.booking;
   }
 
-  async completeBooking(account: Account, id: number) {
+  async completeBooking(driver: Driver, id: number) {
     const booking =
       await this.bookingRepository.findOneByIdAndDriverIdAndStatus(
         id,
-        account.id,
+        driver.id,
         BookingStatus.DRIVING,
         ['locations'],
       );
     if (!booking) throw new BookingNotFoundException();
-    const driver = await this.driverRepository.findOneOrFail({
-      where: { id: account.id },
-    });
     const distance = this.distanceService.calculate(
       driver.location,
       booking.dropOffLocation,
     );
     if (distance > 200) throw new DistanceTooFarException();
     booking.status = BookingStatus.COMPLETED;
-    await this.updateMatchingStatistic(account.id, [
+    await this.updateMatchingStatistic(driver.id, [
       { increase: true, field: 'success' },
     ]);
+    await this.driverRepository.update(
+      { id: driver.id },
+      { status: DriverStatus.AVAILABLE },
+    );
     return this.bookingRepository.save(booking);
   }
 

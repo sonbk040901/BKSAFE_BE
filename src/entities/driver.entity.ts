@@ -1,18 +1,10 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  OneToOne,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { Account } from './account.entity';
 import { License } from './license.entity';
 import { MatchingStatistic } from '~entities/matching-statistic.entity';
 import { Exclude, Transform } from 'class-transformer';
 import { BookingSuggestDriver } from '~entities/booking-suggest-driver.entity';
 import { RoleName } from '~/common/enums/role-name.enum';
-import { Notification } from '~entities/noti.entity';
 
 export enum DriverStatus {
   AVAILABLE = 'AVAILABLE',
@@ -67,13 +59,6 @@ export class Driver extends Account {
   registerStatus: RegisterStatus;
   @OneToOne(() => BookingSuggestDriver, (target) => target.driver)
   bookingSuggestDriver: BookingSuggestDriver;
-  @ManyToMany(() => Notification)
-  @JoinTable({
-    name: 'driver_notifications',
-    joinColumn: { name: 'driver_id' },
-    inverseJoinColumn: { name: 'notification_id' },
-  })
-  notifications: Notification[];
 
   isRegisterStatusAccepted(): boolean {
     return this.registerStatus === RegisterStatus.ACCEPTED;
