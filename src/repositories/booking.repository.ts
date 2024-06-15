@@ -63,6 +63,7 @@ export class BookingRepository extends Repository<Booking> {
       order: { [findAllDto.sort]: findAllDto.order },
       take: findAllDto.take,
       skip: findAllDto.skip,
+      relations: ['locations', 'notes', 'driver'],
     });
   }
 
