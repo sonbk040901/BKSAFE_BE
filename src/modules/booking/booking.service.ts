@@ -27,10 +27,21 @@ import { RatingDto } from '@booking/dto/rating.dto';
 import { IsNull } from 'typeorm';
 import { LocationDto } from '@booking/dto/location.dto';
 import { BookingGateway } from './booking.gateway';
+import { genFindOperator } from '~/repositories/utils';
+import { ignoreExceptions } from '~/utils/common';
 
 @Injectable()
 export class BookingService {
   private autoFindDriver: boolean = false;
+  /**
+   * Timeout duration (in milliseconds) for finding a driver.
+   * If the driver is not found within this duration, the booking will be cancelled.
+   * Default: 5 minutes
+   */
+  private readonly FIND_DRIVER_TIMEOUT = 5 * 60 * 1000;
+  private readonly SUGGEST_TIMEOUT = 21_000;
+  private readonly FIND_DRIVER_INTERVAL = 1_000;
+  private readonly MAX_SUGGEST_DRIVER = 5;
 
   constructor(
     private drivingCostService: DrivingCostService,
@@ -74,8 +85,32 @@ export class BookingService {
     });
     await this.bookingRepository.save(booking);
     if (!this.autoFindDriver) return booking;
-    this.autoSuggestDriver(pickup, booking.id);
+    //Cứ mỗi 1 giây tìm 1 lần tài xế
+    const ti = setInterval(() => {
+      this.autoSuggestDriver(pickup, booking.id);
+    }, this.FIND_DRIVER_INTERVAL);
+    //Sau 5 phút không tìm được tài xế thì chuyển trạng thái booking sang timeout
+    setTimeout(() => {
+      clearInterval(ti);
+      ignoreExceptions(this.timeout, booking.id);
+    }, this.FIND_DRIVER_TIMEOUT);
     return booking;
+  }
+
+  async timeout(bookingId: number) {
+    const whereQuery = {
+      id: bookingId,
+      status: genFindOperator([BookingStatus.PENDING, BookingStatus.ACCEPTED]),
+    };
+    const booking = await this.bookingRepository.findOneBy(whereQuery);
+    if (!booking) throw new BookingNotFoundException();
+    await this.bSDRepository.delete({ bookingId });
+    booking.status = BookingStatus.TIMEOUT;
+    await this.bookingRepository.save(booking, { reload: false });
+    this.bookingGateway.updateBookingStatus(
+      booking.userId,
+      BookingStatus.TIMEOUT,
+    );
   }
 
   private async autoSuggestDriver(pickup: LocationDto, bookingId: number) {
@@ -87,6 +122,12 @@ export class BookingService {
       await this.bSDRepository.delete({ bookingId });
       return;
     }
+    // for (let i = 0; i < suggestDrivers.length; i++) {
+    //   if (i >= this.MAX_SUGGEST_DRIVER) break;
+    //   const driver = suggestDrivers[i];
+    //   await this.suggestDriver(bookingId, driver.id);
+    //   this.bookingGateway.suggestDriver(driver.id, bookingId);
+    // }
     const driver = suggestDrivers[0];
     await this.suggestDriver(bookingId, driver.id);
     this.bookingGateway.suggestDriver(driver.id, bookingId);
@@ -178,25 +219,12 @@ export class BookingService {
     await this.updateMatchingStatistic(driverId, [
       { increase: true, field: 'reject' },
     ]);
-    if (this.autoFindDriver) {
-      const bsds = await this.bSDRepository.findBy({
-        bookingId,
-      });
-      if (bsds.length && bsds.every((bsd) => bsd.isRejected)) {
-        const booking = await this.bookingRepository.findOneOrFail({
-          where: {
-            id: bookingId,
-          },
-          relations: ['locations'],
-        });
-        await this.autoSuggestDriver(booking.pickupLocation, bookingId);
-      }
-    }
   }
 
   async suggestDriver(bookingId: number, driverId: number) {
     const booking = await this.bookingRepository.findOneByOrFail({
       id: bookingId,
+      status: genFindOperator([BookingStatus.PENDING, BookingStatus.ACCEPTED]),
     });
     await this.bSDRepository.insert({
       bookingId: booking.id,
@@ -210,8 +238,8 @@ export class BookingService {
       { increase: true, field: 'total' },
     ]);
     setTimeout(
-      () => this.rejectBooking(driverId, booking.id).catch(() => {}),
-      21_000,
+      () => ignoreExceptions(this.rejectBooking, driverId, booking.id),
+      this.SUGGEST_TIMEOUT,
     );
     return booking;
   }

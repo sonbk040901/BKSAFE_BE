@@ -33,6 +33,7 @@ export enum BookingStatus {
   REJECTED = 'REJECTED',
   CANCELLED = 'CANCELLED',
   COMPLETED = 'COMPLETED',
+  TIMEOUT = 'TIMEOUT',
 }
 
 @Entity('bookings')
