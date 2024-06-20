@@ -92,7 +92,7 @@ export class BookingService {
     //Sau 5 phút không tìm được tài xế thì chuyển trạng thái booking sang timeout
     setTimeout(() => {
       clearInterval(ti);
-      ignoreExceptions(this.timeout, booking.id);
+      ignoreExceptions(this.timeout.bind(this), booking.id);
     }, this.FIND_DRIVER_TIMEOUT);
     return booking;
   }
@@ -111,6 +111,7 @@ export class BookingService {
       booking.userId,
       BookingStatus.TIMEOUT,
     );
+    return booking.userId;
   }
 
   private async autoSuggestDriver(pickup: LocationDto, bookingId: number) {
@@ -238,7 +239,8 @@ export class BookingService {
       { increase: true, field: 'total' },
     ]);
     setTimeout(
-      () => ignoreExceptions(this.rejectBooking, driverId, booking.id),
+      () =>
+        ignoreExceptions(this.rejectBooking.bind(this), driverId, booking.id),
       this.SUGGEST_TIMEOUT,
     );
     return booking;

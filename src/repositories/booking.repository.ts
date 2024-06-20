@@ -18,6 +18,7 @@ export class BookingRepository extends Repository<Booking> {
           BookingStatus.COMPLETED,
           BookingStatus.CANCELLED,
           BookingStatus.REJECTED,
+          BookingStatus.TIMEOUT,
         ]),
       ),
     });
@@ -28,7 +29,11 @@ export class BookingRepository extends Repository<Booking> {
       where: {
         userId,
         status: Raw((alias) => `${alias} not in (:...status)`, {
-          status: [BookingStatus.REJECTED, BookingStatus.CANCELLED],
+          status: [
+            BookingStatus.REJECTED,
+            BookingStatus.CANCELLED,
+            BookingStatus.TIMEOUT,
+          ],
         }),
       },
       order: { createdAt: 'DESC' },

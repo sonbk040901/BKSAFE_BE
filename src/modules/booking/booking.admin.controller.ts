@@ -43,6 +43,13 @@ export class BookingAdminController {
     this.bookingGateway.updateBookingStatus(userId, BookingStatus.REJECTED);
   }
 
+  @Patch(':id/timeout')
+  async stopFindDriver(@Param('id') bookingId: number) {
+    const userId = await this.bookingService.timeout(bookingId);
+    this.bookingGateway.updateBooking(userId, bookingId);
+    this.bookingGateway.updateBookingStatus(userId, BookingStatus.TIMEOUT);
+  }
+
   @Get(':id/suggest/drivers')
   getSuggestDrivers(
     @Param('id') bookingId: number,
