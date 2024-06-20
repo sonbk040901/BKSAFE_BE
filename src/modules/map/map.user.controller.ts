@@ -5,7 +5,7 @@ import { FindDriversDto } from './dto/find-drivers.dto';
 import { UserCtrl } from '~decors/controller/controller.decorator';
 import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('map')
+@ApiTags('user/map')
 @UserCtrl('map')
 export class MapUserController {
   constructor(private readonly mapService: MapService) {}
@@ -23,5 +23,10 @@ export class MapUserController {
   @Post('cost')
   getCostPost(@Body() calculateCostDto: CalculateCostDto) {
     return this.mapService.calculateDrivingCost(calculateCostDto);
+  }
+
+  @Get('api-key')
+  getApiKey() {
+    return this.mapService.getApiKey();
   }
 }

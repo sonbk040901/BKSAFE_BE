@@ -24,7 +24,7 @@ export class BookingUserController {
   ) {
     const booking = await this.bookingService.create(createBookingDto, userId);
     const bookingId = booking.id;
-    if (!this.bookingService.getAutoFindDriver()) {
+    if (!this.bookingService.getFindDriverMode()) {
       this.bookingGateway.updateBooking(userId, bookingId);
       this.bookingGateway.newPendingBooking(bookingId);
       return booking;

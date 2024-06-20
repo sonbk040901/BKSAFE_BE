@@ -53,10 +53,22 @@ export class BookingService {
     private driverRepository: DriverRepository,
     private statisticRepository: MatchingStatisticRepository,
     private bookingGateway: BookingGateway,
-  ) {}
+  ) {
+    this.updateSettings();
+  }
 
-  public getAutoFindDriver() {
-    return this.autoFindDriver;
+  private async updateSettings() {
+    const results = await this.driverRepository.query<{
+      name: string;
+      value: string;
+    }>('SELECT name, value FROM settings WHERE name in (?,?,?,?)', [
+      'auto_find_driver',
+      'find_driver_timeout',
+      'suggest_timeout',
+      'find_driver_interval',
+    ]);
+    this.autoFindDriver =
+      results.find((r) => r.name === 'auto_find_driver')?.value === '1';
   }
 
   async create(createBookingDto: CreateBookingDto, userId: number) {
@@ -187,6 +199,10 @@ export class BookingService {
 
   changeFindDriverMode(changeModeDto: ChangeFindDriverModeDto) {
     this.autoFindDriver = changeModeDto.auto ?? !this.autoFindDriver;
+    this.driverRepository.query('REPLACE INTO settings VALUES (?, ?)', [
+      'auto_find_driver',
+      this.autoFindDriver ? '1' : '0',
+    ]);
     return this.autoFindDriver;
   }
 
