@@ -55,7 +55,7 @@ export class MapService {
   updateApiKey(key: string) {
     this.apiKey = key;
     this.driverRepository.query(
-      "REPLACE INTO settings VALUES ('google_maps_api_key', ?)",
+      "REPLACE INTO settings(name,value) VALUES ('google_maps_api_key', ?)",
       [key],
     );
   }

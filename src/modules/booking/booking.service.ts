@@ -199,7 +199,7 @@ export class BookingService {
 
   changeFindDriverMode(changeModeDto: ChangeFindDriverModeDto) {
     this.autoFindDriver = changeModeDto.auto ?? !this.autoFindDriver;
-    this.driverRepository.query('REPLACE INTO settings VALUES (?, ?)', [
+    this.driverRepository.query('REPLACE INTO settings (name,value) VALUES (?, ?)', [
       'auto_find_driver',
       this.autoFindDriver ? '1' : '0',
     ]);

@@ -1,20 +1,20 @@
+import { ActionDriverDto } from '@driver/dto/action-driver.dto';
+import { ActionRegisterDriverDto } from '@driver/dto/action-register-driver.dto';
 import { Injectable } from '@nestjs/common';
 import { PagingResponseDto } from '~/common/dto/paging-response.dto';
+import { ActivateStatus } from '~entities/account.entity';
 import { Booking } from '~entities/booking.entity';
-import { DriverStatus, RegisterStatus } from '~entities/driver.entity';
+import { DriverStatus } from '~entities/driver.entity';
 import { DriverNotFoundException } from '~exceptions/httpException';
 import { BookingRepository } from '~repos/booking.repository';
 import { DriverRepository } from '~repos/driver.repository';
+import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
 import { DistanceService } from '~utils/distance.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { FindAllDto } from './dto/find-all.dto';
 import { UpdateDriverLocationDto } from './dto/update-driver-location.dto';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
-import { ActionRegisterDriverDto } from '@driver/dto/action-register-driver.dto';
-import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
-import { ActivateStatus } from '~entities/account.entity';
-import { ActionDriverDto } from '@driver/dto/action-driver.dto';
 
 @Injectable()
 export class DriverService {
@@ -73,10 +73,7 @@ export class DriverService {
   }
 
   async findAll(findAllDto: FindAllDto) {
-    const [drivers, count] = await this.driverRepository.findAll(findAllDto, [
-      'license',
-      'matchingStatistic',
-    ]);
+    const [drivers, count] = await this.driverRepository.findAll(findAllDto);
     return new PagingResponseDto(drivers, count, findAllDto);
   }
 
@@ -84,47 +81,45 @@ export class DriverService {
     const statusResult = await this.driverRepository.query<{
       total: string;
       status: DriverStatus;
-    }>('SELECT COUNT(*) as total, status FROM drivers GROUP BY status');
-    const registerStatusResult = await this.driverRepository.query<{
-      total: number;
-      registerStatus: RegisterStatus;
     }>(
-      'SELECT COUNT(*) as total, register_status registerStatus FROM drivers GROUP BY registerStatus',
+      'SELECT COUNT(*) as total, status FROM drivers d where d.register_status = "ACCEPTED" GROUP BY status',
     );
     const activateStatusResult = await this.driverRepository.query<{
       total: number;
       activateStatus: ActivateStatus;
     }>(
-      'SELECT COUNT(*) as total, activate_status activateStatus FROM drivers GROUP BY activateStatus',
+      'SELECT COUNT(*) as total, activate_status activateStatus FROM drivers where register_status = "ACCEPTED" GROUP BY activateStatus',
     );
-    const status = statusResult.reduce((acc, { total, status }) => {
-      acc[status] = +total;
-      return acc;
-    }, {});
-    const registerStatus = registerStatusResult.reduce(
-      (acc, { total, registerStatus }) => {
-        acc[registerStatus] = +total;
+    const status = statusResult.reduce(
+      (acc, { total, status }) => {
+        acc[status] = +total;
         return acc;
       },
-      {},
+      {
+        OFFLINE: 0,
+        BUSY: 0,
+        AVAILABLE: 0,
+      } as Record<DriverStatus, number>,
     );
     const activateStatus = activateStatusResult.reduce(
       (acc, { total, activateStatus }) => {
         acc[activateStatus] = +total;
         return acc;
       },
-      {},
+      { ACTIVATED: 0, BLOCKED: 0 } as Record<ActivateStatus, number>,
     );
     return {
       total: statusResult.reduce((acc, { total }) => +total + acc, 0),
       status,
-      registerStatus,
       activateStatus,
     };
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} driver`;
+    return this.driverRepository.findOne({
+      where: { id },
+      relations: ['license', 'cccd', 'matchingStatistic'],
+    });
   }
 
   update(id: number, updateDriverDto: UpdateDriverDto) {
@@ -147,5 +142,15 @@ export class DriverService {
       { id },
       { activateStatus: actionDriverDto.status },
     );
+  }
+
+  async findAllRegister(findAllDto: FindAllDto) {
+    const [drivers, count] = await this.driverRepository.findAndCount({
+      where: { activateStatus: ActivateStatus.ACTIVATED },
+      order: { [findAllDto.sort]: findAllDto.order },
+      take: findAllDto.take,
+      skip: findAllDto.skip,
+    });
+    return new PagingResponseDto(drivers, count, findAllDto);
   }
 }

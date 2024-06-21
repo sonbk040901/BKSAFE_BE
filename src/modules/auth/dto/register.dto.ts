@@ -12,11 +12,6 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
   @ApiProperty({
-    default: 'username',
-  })
-  @IsNotEmpty()
-  username: string;
-  @ApiProperty({
     default: 'driver@gmail.com',
   })
   @IsEmail()

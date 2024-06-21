@@ -24,14 +24,19 @@ export class DriverAdminController {
     return this.driverService.findAll(findAllDto);
   }
 
+  @Get('register')
+  findAllRegister(@Query() findAllDto: FindAllDto) {
+    return this.driverService.findAllRegister(findAllDto);
+  }
+
   @Get('statistic')
   statistic() {
     return this.driverService.statistic();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.driverService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.driverService.findOne(id);
   }
 
   @Patch(':id')

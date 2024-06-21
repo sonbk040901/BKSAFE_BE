@@ -5,6 +5,7 @@ import { MatchingStatistic } from '~entities/matching-statistic.entity';
 import { Exclude, Transform } from 'class-transformer';
 import { BookingSuggestDriver } from '~entities/booking-suggest-driver.entity';
 import { RoleName } from '~/common/enums/role-name.enum';
+import { Cccd } from './cccd.entity';
 
 export enum DriverStatus {
   AVAILABLE = 'AVAILABLE',
@@ -42,6 +43,9 @@ export class Driver extends Account {
   @OneToOne(() => License, { cascade: ['insert'] })
   @JoinColumn({ name: 'license_id' })
   license: License;
+  @OneToOne(() => Cccd, { cascade: ['insert'] })
+  @JoinColumn({ name: 'cccd_id' })
+  cccd: Cccd;
   @Column(() => Location)
   location: Location;
   @Exclude()

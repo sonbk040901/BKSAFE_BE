@@ -12,7 +12,9 @@ export class DriverRepository extends AccountRepository<Driver> {
 
   findAll(findAllDto: FindAllDto, relations?: string[]) {
     return this.findAndCount({
-      where: {},
+      where: {
+        registerStatus: RegisterStatus.ACCEPTED,
+      },
       order: {
         [findAllDto.sort]: findAllDto.order,
       },

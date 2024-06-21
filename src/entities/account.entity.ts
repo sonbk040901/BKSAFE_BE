@@ -20,8 +20,6 @@ export enum ActivateStatus {
 
 export abstract class Account extends BaseEntity {
   @Column()
-  username: string;
-  @Column()
   @Exclude()
   password: string;
   @Column()
