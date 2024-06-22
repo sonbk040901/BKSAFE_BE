@@ -2,6 +2,7 @@ import { Body, Get, Patch } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AdminCtrl } from '~decors/controller/controller.decorator';
 import { MapService } from './map.service';
+import { UpdateApiKeyDto } from './dto/update-api-key.dto';
 
 @ApiTags('admin/map')
 @AdminCtrl('map')
@@ -14,7 +15,7 @@ export class MapAdminController {
   }
 
   @Patch('api-key')
-  updateApiKey(@Body('key') key: string) {
-    return this.mapService.updateApiKey(key);
+  updateApiKey(@Body() updateApiKeyDto: UpdateApiKeyDto) {
+    return this.mapService.updateApiKey(updateApiKeyDto.apiKey);
   }
 }
