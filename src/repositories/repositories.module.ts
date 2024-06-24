@@ -7,6 +7,7 @@ import { BookingSuggestDriverRepository } from '~repos/booking-suggest-driver.re
 import { MatchingStatisticRepository } from '~repos/matching-statistic.repository';
 import { AdminRepository } from '~repos/admin.repository';
 import { NotificationRepository } from '~repos/noti.repository';
+import { SettingRepository } from './setting.repository';
 
 @Global()
 @Module({
@@ -21,6 +22,7 @@ import { NotificationRepository } from '~repos/noti.repository';
     BookingSuggestDriverRepository,
     MatchingStatisticRepository,
     NotificationRepository,
+    SettingRepository,
   ],
   exports: [
     DriverRepository,
@@ -31,6 +33,7 @@ import { NotificationRepository } from '~repos/noti.repository';
     BookingSuggestDriverRepository,
     MatchingStatisticRepository,
     NotificationRepository,
+    SettingRepository,
   ],
 })
 export class RepositoriesModule {}
