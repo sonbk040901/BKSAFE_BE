@@ -25,6 +25,10 @@ export class BookingGateway extends BaseGateway {
     this.server.to(userId.toString()).emit('current', bookingId);
   }
 
+  updateCurrentDriverLocation(userId: number, location: unknown) {
+    this.server.to(userId.toString()).emit('current-driver-location', location);
+  }
+
   /**
    * Gửi thông báo đến `tài xế` về việc có một booking cần tài xế đó nhận
    * @param driverId

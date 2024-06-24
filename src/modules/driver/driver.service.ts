@@ -38,7 +38,8 @@ export class DriverService {
     // Lấy ra booking hiện tại của driver
     const booking = await this.bookingRepository.findCurrentByDriverId(id);
     if (!booking) return null;
-    return this.updateNextLocation(booking, location);
+    this.updateNextLocation(booking, location);
+    return booking;
   }
 
   /**

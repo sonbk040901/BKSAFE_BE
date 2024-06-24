@@ -448,6 +448,10 @@ export class BookingService {
     if (!booking) throw new BookingNotFoundException();
     booking.rating = ratingDto.rating;
     booking.review = ratingDto.review;
-    return this.bookingRepository.save(booking);
+    await this.bookingRepository.save(booking);
+    this.driverRepository.query(
+      'UPDATE drivers SET rating = (SELECT AVG(rating) FROM bookings WHERE driver_id = drivers.id) WHERE id = ?',
+      [booking.driverId],
+    );
   }
 }

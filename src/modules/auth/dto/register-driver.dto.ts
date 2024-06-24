@@ -3,6 +3,7 @@ import { IsDate, IsObject, IsString, ValidateNested } from 'class-validator';
 import { LicenseDto } from '@auth/dto/license.dto';
 import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { CccdDto } from './cccd.dto';
 
 export class RegisterDriverDto extends RegisterDto {
   @ApiProperty()
@@ -17,4 +18,8 @@ export class RegisterDriverDto extends RegisterDto {
   @ValidateNested()
   @IsObject()
   license: LicenseDto;
+  @Type(() => CccdDto)
+  @ValidateNested()
+  @IsObject()
+  cccd: CccdDto;
 }
