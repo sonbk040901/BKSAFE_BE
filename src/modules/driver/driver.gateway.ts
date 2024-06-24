@@ -31,7 +31,7 @@ export class DriverGateway extends BaseGateway {
     if (!booking) return;
     this.server.server
       .of('booking')
-      .to(booking.userId.toString())
+      .to([booking.userId.toString(), 'admin'])
       .emit('current-driver-location', payload);
   }
 }

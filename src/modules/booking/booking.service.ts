@@ -29,6 +29,7 @@ import { LocationDto } from '@booking/dto/location.dto';
 import { BookingGateway } from './booking.gateway';
 import { genFindOperator } from '~/repositories/utils';
 import { ignoreExceptions } from '~/utils/common';
+import { PriorityService } from '~/utils/priority.service';
 
 @Injectable()
 export class BookingService {
@@ -46,6 +47,7 @@ export class BookingService {
   constructor(
     private drivingCostService: DrivingCostService,
     private driverPriorityService: DriverPriorityService,
+    private priorityService: PriorityService,
     private distanceService: DistanceService,
     private bookingRepository: BookingRepository,
     private noteRepository: NoteRepository,
@@ -127,7 +129,7 @@ export class BookingService {
   }
 
   private async autoSuggestDriver(pickup: LocationDto, bookingId: number) {
-    const suggestDrivers = await this.getSuggestDriversByLocation(
+    const suggestDrivers = await this.getSuggestDriversByLocationV2(
       pickup,
       bookingId,
     );
@@ -135,12 +137,6 @@ export class BookingService {
       await this.bSDRepository.delete({ bookingId });
       return;
     }
-    // for (let i = 0; i < suggestDrivers.length; i++) {
-    //   if (i >= this.MAX_SUGGEST_DRIVER) break;
-    //   const driver = suggestDrivers[i];
-    //   await this.suggestDriver(bookingId, driver.id);
-    //   this.bookingGateway.suggestDriver(driver.id, bookingId);
-    // }
     const driver = suggestDrivers[0];
     await this.suggestDriver(bookingId, driver.id);
     this.bookingGateway.suggestDriver(driver.id, bookingId);
@@ -272,7 +268,7 @@ export class BookingService {
     });
     if (!booking) throw new BookingNotFoundException();
     const pickup = booking.pickupLocation;
-    const suggestDrivers = await this.getSuggestDriversByLocation(
+    const suggestDrivers = await this.getSuggestDriversByLocationV2(
       pickup,
       bookingId,
     );
@@ -315,6 +311,62 @@ export class BookingService {
       suggestDrivers.push(driver);
     });
     return suggestDrivers.sort((d1, d2) => d2['priority'] - d1['priority']);
+  }
+
+  private async getSuggestDriversByLocationV2(
+    pickup: ILocation,
+    bookingId: number,
+  ) {
+    // Tìm ra tài xế chưa từng được đề xuất cho booking này và đang không được đề xuất cho booking khác
+    const results = await this.driverRepository
+      .createQueryBuilder('d')
+      .where(
+        'd.id not in (select driver_id from booking_suggest_drivers where booking_id = :id or is_rejected = 0)',
+        { id: bookingId },
+      )
+      .leftJoinAndSelect('d.matchingStatistic', 'matchingStatistic')
+      .getMany();
+    const suggestDrivers: Driver[] = results.filter((driver) => {
+      const distance = this.distanceService.calculate(pickup, driver.location);
+      driver['distance'] = distance;
+      return distance <= 2500;
+    });
+    const variance = this.priorityService.calculateVariance(
+      suggestDrivers.map((d) => d.matchingStatistic?.accept ?? 0),
+    );
+    const drivers = suggestDrivers.map((driver) => {
+      const normalDistribution =
+        this.priorityService.calculateNormalDistribution(
+          driver.matchingStatistic?.accept ?? 0,
+          variance,
+        );
+      Object.assign(driver, { normalDistribution });
+      return driver as Driver & {
+        normalDistribution: number;
+      };
+    });
+    const maxNormalDistribution = Math.max(
+      ...drivers.map((d) => d.normalDistribution),
+    );
+    return drivers
+      .map((driver) => {
+        const distance = driver['distance'] as number;
+        const matchingStatistic = driver.matchingStatistic;
+        const normalDistribution = driver.normalDistribution;
+        const options = {
+          distance,
+          rating: driver.rating,
+          matchCount: matchingStatistic?.total ?? 0,
+          rejectCount: matchingStatistic?.reject ?? 0,
+          acceptCount: matchingStatistic?.accept ?? 0,
+          normalDistribution,
+          maxNormalDistribution,
+        };
+        driver['priority'] = this.priorityService.calculate(options);
+        Object.assign(driver, options);
+        return driver;
+      })
+      .sort((d1, d2) => d2['priority'] - d1['priority']);
   }
 
   async reject(bookingId: number) {
