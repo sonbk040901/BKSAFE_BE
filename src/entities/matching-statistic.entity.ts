@@ -31,6 +31,9 @@ export class MatchingStatistic {
     cascade: false,
     onDelete: 'SET NULL',
   })
+  @Column()
+  driverId: number;
   @JoinColumn({ name: 'driver_id' })
+  @OneToOne(() => Driver, { cascade: false })
   driver: Driver;
 }

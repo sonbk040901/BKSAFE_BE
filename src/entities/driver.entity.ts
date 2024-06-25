@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { Account } from './account.entity';
 import { License } from './license.entity';
 import { MatchingStatistic } from '~entities/matching-statistic.entity';
@@ -6,6 +6,7 @@ import { Exclude, Transform } from 'class-transformer';
 import { BookingSuggestDriver } from '~entities/booking-suggest-driver.entity';
 import { RoleName } from '~/common/enums/role-name.enum';
 import { Cccd } from './cccd.entity';
+import { Booking } from './booking.entity';
 
 export enum DriverStatus {
   AVAILABLE = 'AVAILABLE',
@@ -63,6 +64,9 @@ export class Driver extends Account {
   registerStatus: RegisterStatus;
   @OneToOne(() => BookingSuggestDriver, (target) => target.driver)
   bookingSuggestDriver: BookingSuggestDriver;
+
+  @OneToMany(() => Booking, (target) => target.driver)
+  bookings: Booking[];
 
   isRegisterStatusAccepted(): boolean {
     return this.registerStatus === RegisterStatus.ACCEPTED;

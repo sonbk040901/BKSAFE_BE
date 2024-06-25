@@ -3,7 +3,7 @@ import { ActionRegisterDriverDto } from '@driver/dto/action-register-driver.dto'
 import { Injectable } from '@nestjs/common';
 import { PagingResponseDto } from '~/common/dto/paging-response.dto';
 import { ActivateStatus } from '~entities/account.entity';
-import { Booking } from '~entities/booking.entity';
+import { Booking, BookingStatus } from '~entities/booking.entity';
 import { DriverStatus } from '~entities/driver.entity';
 import { DriverNotFoundException } from '~exceptions/httpException';
 import { BookingRepository } from '~repos/booking.repository';
@@ -14,7 +14,7 @@ import { CreateDriverDto } from './dto/create-driver.dto';
 import { FindAllDto } from './dto/find-all.dto';
 import { UpdateDriverLocationDto } from './dto/update-driver-location.dto';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
-import { UpdateDriverDto } from './dto/update-driver.dto';
+import { And, Raw } from 'typeorm';
 
 @Injectable()
 export class DriverService {
@@ -123,10 +123,6 @@ export class DriverService {
     });
   }
 
-  update(id: number, updateDriverDto: UpdateDriverDto) {
-    return `This action updates a #${id} driver`;
-  }
-
   remove(id: number) {
     return `This action removes a #${id} driver`;
   }
@@ -153,5 +149,33 @@ export class DriverService {
       skip: findAllDto.skip,
     });
     return new PagingResponseDto(drivers, count, findAllDto);
+  }
+
+  async getStatitsticByDriver(driverId: number, month: Date) {
+    const results: { totalPrice: string; totalBooking: string }[] =
+      await this.bookingRepository.query(
+        'SELECT sum(price) totalPrice, count(*) totalBooking FROM BKSAFE.bookings WHERE driver_id = ? and status = "COMPLETED" AND year(created_at) = year(?) AND month(created_at) = month(?) group by driver_id',
+        [driverId, month, month],
+      );
+    const result2 = await this.statisticRepository.findOneBy({ driverId });
+    return {
+      totalBooking: +(results[0]?.totalBooking || 0),
+      totalPrice: +(results[0]?.totalPrice || 0),
+      totalReject: result2?.reject || 0,
+    };
+  }
+
+  async getBookings(driverId: number, month: Date) {
+    return await this.bookingRepository.find({
+      where: {
+        driverId,
+        createdAt: And(
+          Raw((alias) => `MONTH(${alias}) = MONTH(:month)`, { month }),
+          Raw((alias) => `YEAR(${alias}) = YEAR(:month)`, { month }),
+        ),
+        status: BookingStatus.COMPLETED,
+      },
+      relations: ['user', 'locations'],
+    });
   }
 }
