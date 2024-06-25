@@ -20,7 +20,7 @@ export class MapService {
     this.driverRepository
       .query<{
         value: string;
-      }>('SELECT value FROM settings WHERE name = "google_maps_api_key"')
+      }>("SELECT value FROM settings WHERE name = 'google_maps_api_key'")
       .then((result) => {
         this.apiKey = result[0]?.value ?? '';
       });
