@@ -56,7 +56,7 @@ export class PriorityService {
     );
   }
   private calculateDistancePriority(distance: number) {
-    return (0.25 * Math.abs(2500 - distance)) / 2500;
+    return (0.2 * Math.abs(2500 - distance)) / 2500;
   }
   private calculateRatingPriority(rating: number) {
     return (0.2 * rating) / 5;
@@ -65,7 +65,7 @@ export class PriorityService {
     normalDistributions: number,
     maxNormalDistribution: number,
   ) {
-    return (0.35 * normalDistributions) / maxNormalDistribution;
+    return (0.4 * normalDistributions) / maxNormalDistribution;
   }
   private calculateAcceptPercentPriority(
     matchCount: number,
