@@ -29,13 +29,16 @@ export class DriverGateway extends BaseGateway {
   ) {
     const booking = await this.driverService.updateLocation(driver.id, payload);
     if (!booking) return;
-    this.server.server
-      .of('booking')
-      .to(booking.userId.toString())
-      .emit('current-driver-location', payload);
-    this.server.server
-      .of('booking')
-      .to('admin')
-      .emit('current-driver-location', { ...payload, driverId: driver.id });
+    this.emitToUser(booking.userId, 'current-driver-location', payload, {
+      nsp: 'booking',
+    });
+    this.emitToAdmin(
+      'current-driver-location',
+      {
+        ...payload,
+        driverId: driver.id,
+      },
+      { nsp: 'booking' },
+    );
   }
 }

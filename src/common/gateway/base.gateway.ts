@@ -7,6 +7,13 @@ import { Namespace, Socket } from 'socket.io';
 import { UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from '~guards/ws-jwt.guard';
 import { IAuthVerify } from '~interfaces/auth-verify.interface';
+import { RoleName } from '../enums/role-name.enum';
+interface Options {
+  /**
+   * Namespace
+   */
+  nsp?: string;
+}
 
 @UseGuards(WsJwtGuard)
 export class BaseGateway
@@ -26,17 +33,19 @@ export class BaseGateway
   async handleConnection(client: Socket) {
     console.log(`connected ${client.nsp.name}`);
     const authToken = this.extractToken(client);
-    client.data.user = await this.authService
-      .verify(authToken)
-      .then((user) => {
-        const isAdmin = user.getRole() === 'ADMIN';
-        if (isAdmin) {
-          console.log('admin join');
-          client.join('admin');
-        } else client.join(user.id.toString());
-        return user;
-      })
-      .catch(() => client.disconnect());
+    try {
+      const account = await this.authService.verify(authToken);
+      client.data.user = account;
+      const role = account.getRole();
+      if (role === RoleName.ADMIN) {
+        client.join(RoleName.ADMIN);
+        return;
+      }
+      client.join([role, `${role}${account.id}`]);
+    } catch (error) {
+      console.error(error);
+      client.disconnect();
+    }
   }
 
   private extractToken(client: Socket): string {
@@ -45,5 +54,39 @@ export class BaseGateway
       client.handshake.headers?.token ||
       client.handshake.headers.authorization
     );
+  }
+
+  emitToAdmin(event: string, data: unknown, opts?: Options) {
+    this.emitToRole(RoleName.ADMIN, event, data, opts);
+  }
+
+  emitToRole(role: RoleName, event: string, data: unknown, opts?: Options) {
+    this.applyOptions(opts).to(role).emit(event, data);
+  }
+
+  emitToUser(
+    userId: number | undefined,
+    event: string,
+    data: unknown,
+    opts?: Options,
+  ) {
+    this.applyOptions(opts)
+      .to(`${RoleName.USER}${userId ?? ''}`)
+      .emit(event, data);
+  }
+
+  emitToDriver(
+    driverId: number | undefined,
+    event: string,
+    data: unknown,
+    opts?: Options,
+  ) {
+    this.applyOptions(opts)
+      .to(`${RoleName.DRIVER}${driverId ?? ''}`)
+      .emit(event, data);
+  }
+
+  applyOptions(opts?: Options) {
+    return opts?.nsp ? this.server.server.of(opts.nsp) : this.server;
   }
 }

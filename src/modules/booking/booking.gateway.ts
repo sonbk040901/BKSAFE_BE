@@ -16,17 +16,15 @@ export class BookingGateway extends BaseGateway {
   }
 
   updateBookingDriver(userId: number, driver: Account) {
-    this.server
-      .to(userId.toString())
-      .emit('current-driver', instanceToPlain(driver));
+    this.emitToUser(userId, 'current-driver', instanceToPlain(driver));
   }
 
   updateBooking(userId: number, bookingId: number) {
-    this.server.to(userId.toString()).emit('current', bookingId);
+    this.emitToUser(userId, 'current', bookingId);
   }
 
   updateCurrentDriverLocation(userId: number, location: unknown) {
-    this.server.to(userId.toString()).emit('current-driver-location', location);
+    this.emitToUser(userId, 'current-driver-location', location);
   }
 
   /**
@@ -35,7 +33,7 @@ export class BookingGateway extends BaseGateway {
    * @param bookingId
    */
   suggestDriver(driverId: number, bookingId: number) {
-    this.server.to(driverId.toString()).emit('suggest', bookingId);
+    this.emitToDriver(driverId, 'suggest', bookingId);
   }
 
   /**
@@ -44,7 +42,7 @@ export class BookingGateway extends BaseGateway {
    * @param bookingId
    */
   newPendingBooking(bookingId: number) {
-    this.server.to('admin').emit('new-pending', bookingId);
+    this.emitToAdmin('new-pending', bookingId);
   }
 
   /**
@@ -52,6 +50,6 @@ export class BookingGateway extends BaseGateway {
    * @param bookingId
    */
   newAcceptedBooking(bookingId: number) {
-    this.server.to('admin').emit('new-accepted', bookingId);
+    this.emitToAdmin('new-accepted', bookingId);
   }
 }
