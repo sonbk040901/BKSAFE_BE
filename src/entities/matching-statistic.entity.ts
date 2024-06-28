@@ -27,10 +27,6 @@ export class MatchingStatistic {
   // Số chuyến bị tài xế từ chối
   @Column({ type: 'int', default: 0 })
   reject: number;
-  @OneToOne(() => Driver, {
-    cascade: false,
-    onDelete: 'SET NULL',
-  })
   @Column()
   driverId: number;
   @JoinColumn({ name: 'driver_id' })
