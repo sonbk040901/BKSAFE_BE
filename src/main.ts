@@ -19,4 +19,4 @@ async function bootstrap() {
   await app.listen(3000);
 }
 
-bootstrap().then(() => console.log('App started!'));
+bootstrap().then(() => console.log('BKSafe started!'));

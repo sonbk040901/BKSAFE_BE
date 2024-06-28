@@ -12,6 +12,10 @@ export class Notification extends BaseEntity {
   title: string;
   @Column()
   content: string;
+  @Column({ nullable: true })
+  image: string;
   @Column({ type: 'enum', enum: NotificationTarget })
   target: NotificationTarget;
+  @Column()
+  accountId: number;
 }

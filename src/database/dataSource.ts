@@ -14,7 +14,7 @@ export const dataSourceOptions: TypeOrmModuleAsyncOptions = {
     entities: ['dist/**/*.entity.js'],
     migrations: ['dist/db/migrations/*.js'],
     synchronize: true,
-    logging: ['query'],
+    logging: ['error'],
     namingStrategy: new SnakeNamingStrategy(),
   }),
 };
