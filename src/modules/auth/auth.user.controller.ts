@@ -51,6 +51,7 @@ export class AuthUserController {
     res.cookie('access_token', token, {
       httpOnly: true,
       expires,
+      sameSite: 'lax',
       domain: process.env.COOKIE_DOMAIN || 'localhost',
     });
     return token;

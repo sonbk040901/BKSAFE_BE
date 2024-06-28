@@ -39,6 +39,7 @@ export class AuthAdminController {
     res.cookie('access_token', token, {
       httpOnly: true,
       expires,
+      sameSite: 'none',
       domain: process.env.COOKIE_DOMAIN || 'localhost',
     });
     return token;
