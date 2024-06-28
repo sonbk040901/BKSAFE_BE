@@ -40,7 +40,7 @@ export class AuthDriverController {
     res.cookie('access_token', token, {
       httpOnly: true,
       expires,
-      sameSite: 'none',
+      sameSite: 'lax',
       domain: process.env.COOKIE_DOMAIN || 'localhost',
     });
     return token;
