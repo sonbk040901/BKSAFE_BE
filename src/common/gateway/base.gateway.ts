@@ -8,12 +8,7 @@ import { UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from '~guards/ws-jwt.guard';
 import { IAuthVerify } from '~interfaces/auth-verify.interface';
 import { RoleName } from '../enums/role-name.enum';
-interface Options {
-  /**
-   * Namespace
-   */
-  nsp?: string;
-}
+import { Options } from '~interfaces/gateway.interface';
 
 @UseGuards(WsJwtGuard)
 export class BaseGateway
@@ -56,18 +51,23 @@ export class BaseGateway
     );
   }
 
-  emitToAdmin(event: string, data: unknown, opts?: Options) {
+  emitToAdmin<D = unknown>(event: string, data: D, opts?: Options) {
     this.emitToRole(RoleName.ADMIN, event, data, opts);
   }
 
-  emitToRole(role: RoleName, event: string, data: unknown, opts?: Options) {
+  emitToRole<D = unknown>(
+    role: RoleName,
+    event: string,
+    data: D,
+    opts?: Options,
+  ) {
     this.applyOptions(opts).to(role).emit(event, data);
   }
 
-  emitToUser(
+  emitToUser<D = unknown>(
     userId: number | undefined,
     event: string,
-    data: unknown,
+    data: D,
     opts?: Options,
   ) {
     this.applyOptions(opts)
@@ -75,10 +75,10 @@ export class BaseGateway
       .emit(event, data);
   }
 
-  emitToDriver(
+  emitToDriver<D = unknown>(
     driverId: number | undefined,
     event: string,
-    data: unknown,
+    data: D,
     opts?: Options,
   ) {
     this.applyOptions(opts)
@@ -86,7 +86,7 @@ export class BaseGateway
       .emit(event, data);
   }
 
-  applyOptions(opts?: Options) {
+  private applyOptions(opts?: Options) {
     return opts?.nsp ? this.server.server.of(opts.nsp) : this.server;
   }
 }

@@ -24,6 +24,7 @@ import { Driver } from '~entities/driver.entity';
  * * `REJECTED`: Bị admin từ chối
  * * `CANCELLED`: Người dùng hủy chuyến
  * * `COMPLETED`: Hoàn thành chuyến
+ * * `TIMEOUT`: Hết thời gian chờ tài xế nhận
  */
 export enum BookingStatus {
   PENDING = 'PENDING',

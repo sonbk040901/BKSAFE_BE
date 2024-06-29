@@ -21,7 +21,7 @@ import { Account, ActivateStatus } from '~entities/account.entity';
 import { RegisterDriverByUserDto } from '@auth/dto/register-driver-by-user.dto';
 import { AdminRepository } from '~repos/admin.repository';
 import { ActiveUserDto } from '@auth/dto/active-user.dto';
-import { BaseAccountService } from '~/common/gateway/base-account.service';
+import { BaseAccountService } from '~/common/services/base-account.service';
 import { RoleName } from '~/common/enums/role-name.enum';
 import { IAuthVerify } from '~interfaces/auth-verify.interface';
 

@@ -12,7 +12,7 @@ export class BookingGateway extends BaseGateway {
   }
 
   updateBookingStatus(userId: number, status: BookingStatus) {
-    this.server.to(userId.toString()).emit('current-status', status);
+    this.emitToUser(userId, 'current-status', status);
   }
 
   updateBookingDriver(userId: number, driver: Account) {
