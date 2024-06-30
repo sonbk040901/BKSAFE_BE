@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { FindAllDto } from '~/modules/driver/dto/find-all.dto';
-import { Driver, DriverStatus, RegisterStatus } from '~entities/driver.entity';
+import { Driver, RegisterStatus } from '~entities/driver.entity';
 import { AccountRepository } from '~repos/account.repository';
 
 @Injectable()
@@ -27,7 +27,7 @@ export class DriverRepository extends AccountRepository<Driver> {
   findAllAvailableDrivers(relations?: string[]) {
     return this.find({
       where: {
-        status: DriverStatus.AVAILABLE,
+        // status: DriverStatus.AVAILABLE,
       },
       relations,
     });

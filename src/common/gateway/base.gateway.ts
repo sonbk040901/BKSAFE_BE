@@ -9,6 +9,7 @@ import { WsJwtGuard } from '~guards/ws-jwt.guard';
 import { IAuthVerify } from '~interfaces/auth-verify.interface';
 import { RoleName } from '../enums/role-name.enum';
 import { Options } from '~interfaces/gateway.interface';
+import { Account } from '~/entities/account.entity';
 
 @UseGuards(WsJwtGuard)
 export class BaseGateway
@@ -20,9 +21,11 @@ export class BaseGateway
 
   handleDisconnect(client: Socket) {
     console.log(`disconnected ${client.nsp.name}`);
-    if (client.data.user) {
-      client.leave(client.data.user.id.toString());
-    }
+    const account = client.data.user as Account;
+    if (!account) return;
+    const role = account.getRole();
+    this.authService.logout(role, account.id);
+    this.getRooms(role, account.id).forEach((room) => client.leave(room));
   }
 
   async handleConnection(client: Socket) {
@@ -32,11 +35,7 @@ export class BaseGateway
       const account = await this.authService.verify(authToken);
       client.data.user = account;
       const role = account.getRole();
-      if (role === RoleName.ADMIN) {
-        client.join(RoleName.ADMIN);
-        return;
-      }
-      client.join([role, `${role}${account.id}`]);
+      this.getRooms(role, account.id).forEach((room) => client.join(room));
     } catch (error) {
       console.error(error);
       client.disconnect();
@@ -49,6 +48,13 @@ export class BaseGateway
       client.handshake.headers?.token ||
       client.handshake.headers.authorization
     );
+  }
+
+  private getRooms(role: RoleName, id?: number): string[] {
+    if (id && role !== RoleName.ADMIN) {
+      return [role.toString(), `${role}${id}`];
+    }
+    return [role];
   }
 
   emitToAdmin<D = unknown>(event: string, data: D, opts?: Options) {

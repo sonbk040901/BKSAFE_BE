@@ -83,13 +83,13 @@ export class DriverService {
       total: string;
       status: DriverStatus;
     }>(
-      'SELECT COUNT(*) as total, status FROM drivers d where d.register_status = "ACCEPTED" GROUP BY status',
+      "SELECT COUNT(*) as total, status FROM drivers d where d.register_status = 'ACCEPTED' GROUP BY status",
     );
     const activateStatusResult = await this.driverRepository.query<{
       total: number;
       activateStatus: ActivateStatus;
     }>(
-      'SELECT COUNT(*) as total, activate_status activateStatus FROM drivers where register_status = "ACCEPTED" GROUP BY activateStatus',
+      "SELECT COUNT(*) as total, activate_status activateStatus FROM drivers where register_status = 'ACCEPTED' GROUP BY activateStatus",
     );
     const status = statusResult.reduce(
       (acc, { total, status }) => {

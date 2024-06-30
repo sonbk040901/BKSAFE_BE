@@ -43,6 +43,7 @@ export class BookingService {
   private readonly SUGGEST_TIMEOUT = 21_000;
   private readonly FIND_DRIVER_INTERVAL = 1_000;
   private readonly MAX_SUGGEST_DRIVER = 5;
+  private readonly MAX_SUGGEST_DRIVER_RADIUS = 2500;
 
   constructor(
     private drivingCostService: DrivingCostService,
@@ -316,6 +317,7 @@ export class BookingService {
   private async getSuggestDriversByLocationV2(
     pickup: ILocation,
     bookingId: number,
+    radius: number = this.MAX_SUGGEST_DRIVER_RADIUS,
   ) {
     // Tìm ra tài xế chưa từng được đề xuất cho booking này và đang không được đề xuất cho booking khác
     const results = await this.driverRepository
@@ -324,12 +326,14 @@ export class BookingService {
         'd.id not in (select driver_id from booking_suggest_drivers where booking_id = :id or is_rejected = 0)',
         { id: bookingId },
       )
+      .andWhere('d.status = :status', { status: DriverStatus.AVAILABLE })
       .leftJoinAndSelect('d.matchingStatistic', 'matchingStatistic')
       .getMany();
+    console.log(results.length);
     const suggestDrivers: Driver[] = results.filter((driver) => {
       const distance = this.distanceService.calculate(pickup, driver.location);
       driver['distance'] = distance;
-      return distance <= 2500;
+      return distance <= radius;
     });
     const variance = this.priorityService.calculateVariance(
       suggestDrivers.map((d) => d.matchingStatistic?.accept ?? 0),
@@ -487,10 +491,22 @@ export class BookingService {
       await this.bookingRepository.query(
         'select status, count(status) count from bookings group by status',
       );
-    return result.reduce((acc, { status, count }) => {
-      acc[status] = +count;
-      return acc;
-    }, {});
+    return result.reduce(
+      (acc, { status, count }) => {
+        acc[status] = +count;
+        return acc;
+      },
+      {
+        PENDING: 0,
+        ACCEPTED: 0,
+        RECEIVED: 0,
+        DRIVING: 0,
+        COMPLETED: 0,
+        CANCELLED: 0,
+        REJECTED: 0,
+        TIMEOUT: 0,
+      },
+    );
   }
 
   async rate(userId: number, ratingDto: RatingDto) {

@@ -31,7 +31,7 @@ export class PagingAndSortDto {
   @IsOptional()
   @Transform(({ value }) => value.toLocaleLowerCase())
   @IsEnum(['asc', 'desc'])
-  order: 'asc' | 'desc' = 'asc';
+  order: 'asc' | 'desc' = 'desc';
   @ApiProperty({
     default: 'id',
     description: 'The field to sort by',

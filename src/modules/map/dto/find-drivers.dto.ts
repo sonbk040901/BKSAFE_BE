@@ -33,5 +33,5 @@ export class FindDriversDto {
   @IsOptional()
   @Transform(({ value }) => parseInt(value), { toClassOnly: true })
   @IsNumber()
-  radius: number = 10_000;
+  radius: number = 5_000;
 }

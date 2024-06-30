@@ -51,4 +51,14 @@ export class AuthDriverController {
   async activeUser(@Body() activeUserDto: ActiveUserDto) {
     return this.authService.active(activeUserDto, RoleName.DRIVER);
   }
+
+  @Post('logout')
+  async logout(
+    @Res({ passthrough: true }) res: Response,
+    @CurrentAcc('id') id: number,
+  ) {
+    res.clearCookie('access_token');
+    this.authService.logout(RoleName.DRIVER, id);
+    return 'Logout success';
+  }
 }

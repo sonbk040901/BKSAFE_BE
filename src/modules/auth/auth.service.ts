@@ -15,7 +15,7 @@ import {
 } from '~/common/exceptions/httpException';
 import { BcryptService } from '~utils/bcrypt.service';
 import { DriverRepository } from '~repos/driver.repository';
-import { RegisterStatus } from '~entities/driver.entity';
+import { DriverStatus, RegisterStatus } from '~entities/driver.entity';
 import { UserRepository } from '~repos/user.repository';
 import { Account, ActivateStatus } from '~entities/account.entity';
 import { RegisterDriverByUserDto } from '@auth/dto/register-driver-by-user.dto';
@@ -126,6 +126,11 @@ export class AuthService extends BaseAccountService implements IAuthVerify {
     await accRepo.save(account);
   }
 
+  logout(role: RoleName, id: number) {
+    if (role === RoleName.DRIVER) {
+      this.driverRepository.update(id, { status: DriverStatus.OFFLINE });
+    }
+  }
   // @Cron('0 0 */24 * * *')
   // async cleanLicensesTable() {
   //   await this.adminRepository.query('call clean_licenses_table()');
