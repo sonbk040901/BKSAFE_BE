@@ -196,7 +196,7 @@ export class BookingService {
 
   changeFindDriverMode(changeModeDto: ChangeFindDriverModeDto) {
     this.autoFindDriver = changeModeDto.auto ?? !this.autoFindDriver;
-    this.driverRepository.query(
+    void this.driverRepository.query(
       'REPLACE INTO settings (name,value) VALUES (?, ?)',
       ['auto_find_driver', this.autoFindDriver ? '1' : '0'],
     );
@@ -421,10 +421,11 @@ export class BookingService {
     );
     if (distance > 200) throw new DistanceTooFarException();
     booking.status = BookingStatus.COMPLETED;
-    await this.updateMatchingStatistic(driver.id, [
+    booking.endTime = new Date();
+    void this.updateMatchingStatistic(driver.id, [
       { increase: true, field: 'success' },
     ]);
-    await this.driverRepository.update(
+    void this.driverRepository.update(
       { id: driver.id },
       { status: DriverStatus.AVAILABLE },
     );
@@ -460,6 +461,7 @@ export class BookingService {
     if (!booking) throw new BookingNotFoundException();
     booking.status = BookingStatus.DRIVING;
     booking.nextLocationId = booking.locations[1].id;
+    booking.startTime = new Date();
     return this.bookingRepository.save(booking);
   }
 

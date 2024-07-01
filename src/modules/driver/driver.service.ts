@@ -1,6 +1,8 @@
+import { Injectable } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { And, Raw } from 'typeorm';
 import { ActionDriverDto } from '@driver/dto/action-driver.dto';
 import { ActionRegisterDriverDto } from '@driver/dto/action-register-driver.dto';
-import { Injectable } from '@nestjs/common';
 import { PagingResponseDto } from '~/common/dto/paging-response.dto';
 import { ActivateStatus } from '~entities/account.entity';
 import { Booking, BookingStatus } from '~entities/booking.entity';
@@ -14,7 +16,7 @@ import { CreateDriverDto } from './dto/create-driver.dto';
 import { FindAllDto } from './dto/find-all.dto';
 import { UpdateDriverLocationDto } from './dto/update-driver-location.dto';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
-import { And, Raw } from 'typeorm';
+import { isCurrent } from '~utils/common';
 
 @Injectable()
 export class DriverService {
@@ -38,7 +40,7 @@ export class DriverService {
     // Lấy ra booking hiện tại của driver
     const booking = await this.bookingRepository.findCurrentByDriverId(id);
     if (!booking) return null;
-    this.updateNextLocation(booking, location);
+    void this.updateNextLocation(booking, location);
     return booking;
   }
 
@@ -151,18 +153,36 @@ export class DriverService {
     return new PagingResponseDto(drivers, count, findAllDto);
   }
 
-  async getStatitsticByDriver(driverId: number, month: Date) {
+  async getStatisticByDriver(driverId: number, month: Date) {
     const results: { totalPrice: string; totalBooking: string }[] =
       await this.bookingRepository.query(
-        'SELECT sum(price) totalPrice, count(*) totalBooking FROM BKSAFE.bookings WHERE driver_id = ? and status = "COMPLETED" AND year(created_at) = year(?) AND month(created_at) = month(?) group by driver_id',
+        'SELECT sum(price) totalPrice, count(*) totalBooking FROM bookings WHERE driver_id = ? and status = "COMPLETED" AND year(created_at) = year(?) AND month(created_at) = month(?) group by driver_id',
         [driverId, month, month],
       );
-    const result2 = await this.statisticRepository.findOneBy({ driverId });
+    const isCurrentMonth = isCurrent(month, 'month');
+    const statistic = await this.statisticRepository.findOneBy({ driverId });
     return {
       totalBooking: +(results[0]?.totalBooking || 0),
       totalPrice: +(results[0]?.totalPrice || 0),
-      totalReject: result2?.reject || 0,
+      totalReject: isCurrentMonth ? statistic?.reject || 0 : undefined,
     };
+  }
+
+  async getYearStatisticByDriver(driverId: number, year: number) {
+    const result: { month: string; price: string; total: string }[] =
+      await this.bookingRepository.query(
+        "SELECT month(created_at) month, sum(price) price, count(*) total FROM bookings b where driver_id = ? and status = 'COMPLETED' and year(created_at) = ? group by month",
+        [driverId, year],
+      );
+    return Array.from({ length: 12 }, (_, i) => {
+      const month = i + 1;
+      const r = result.find((r) => +r.month == month);
+      return {
+        month,
+        price: +(r?.price || 0),
+        total: +(r?.total || 0),
+      };
+    });
   }
 
   async getBookings(driverId: number, month: Date) {
@@ -177,5 +197,14 @@ export class DriverService {
       },
       relations: ['user', 'locations'],
     });
+  }
+
+  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
+  private async autoClearStatistic() {
+    await this.statisticRepository.update(
+      {},
+      { reject: 0, accept: 0, fail: 0, success: 0, total: 0 },
+    );
+    console.log('Clear statistic every month');
   }
 }
