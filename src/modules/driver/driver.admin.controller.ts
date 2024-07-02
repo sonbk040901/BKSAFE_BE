@@ -61,14 +61,6 @@ export class DriverAdminController {
     return this.driverService.action(id, actionDriverDto);
   }
 
-  // @Get(':id/month-statistic')
-  // async getStatisticByDriver(
-  //   @Param('id') id: number,
-  //   @Query() statisticDto: GetDriverStatisticDto,
-  // ) {
-  //   return this.driverService.getStatisticByDriver(id, statisticDto.month);
-  // }
-
   @Get(':id/statistic')
   @Permit()
   async getStatisticByDriver(
@@ -77,12 +69,4 @@ export class DriverAdminController {
   ) {
     return this.driverService.getStatisticByDriver(id, statisticDto);
   }
-
-  // @Get(':id/bookings')
-  // async getBookings(
-  //   @Param('id') id: number,
-  //   @Query() statisticDto: GetDriverStatisticDto,
-  // ) {
-  //   return this.driverService.getBookings(id, statisticDto);
-  // }
 }

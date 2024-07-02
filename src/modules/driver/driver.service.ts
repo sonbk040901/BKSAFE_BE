@@ -154,21 +154,6 @@ export class DriverService {
     return new PagingResponseDto(drivers, count, findAllDto);
   }
 
-  // async getStatisticByDriver(driverId: number, month: Date) {
-  //   const results: { totalPrice: string; totalBooking: string }[] =
-  //     await this.bookingRepository.query(
-  //       'SELECT sum(price) totalPrice, count(*) totalBooking FROM bookings WHERE driver_id = ? and status = "COMPLETED" AND year(created_at) = year(?) AND month(created_at) = month(?) group by driver_id',
-  //       [driverId, month, month],
-  //     );
-  //   const isCurrentMonth = isCurrent(month, 'month');
-  //   const statistic = await this.statisticRepository.findOneBy({ driverId });
-  //   return {
-  //     totalBooking: +(results[0]?.totalBooking || 0),
-  //     totalPrice: +(results[0]?.totalPrice || 0),
-  //     totalReject: isCurrentMonth ? statistic?.reject || 0 : undefined,
-  //   };
-  // }
-
   async getStatisticByDriver(driverId: number, dto: GetDriverStatisticDto) {
     const yearQuery =
       "SELECT month(created_at) value, sum(price) price, count(*) total FROM bookings b where driver_id = ? and status = 'COMPLETED' and year(created_at) = year(?) group by value";
