@@ -16,7 +16,8 @@ import { CreateDriverDto } from './dto/create-driver.dto';
 import { FindAllDto } from './dto/find-all.dto';
 import { UpdateDriverLocationDto } from './dto/update-driver-location.dto';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
-import { isCurrent } from '~utils/common';
+import { daysInMonth } from '~utils/common';
+import { GetDriverStatisticDto } from '@driver/dto/get-driver-statistic.dto';
 
 @Injectable()
 export class DriverService {
@@ -153,46 +154,65 @@ export class DriverService {
     return new PagingResponseDto(drivers, count, findAllDto);
   }
 
-  async getStatisticByDriver(driverId: number, month: Date) {
-    const results: { totalPrice: string; totalBooking: string }[] =
-      await this.bookingRepository.query(
-        'SELECT sum(price) totalPrice, count(*) totalBooking FROM bookings WHERE driver_id = ? and status = "COMPLETED" AND year(created_at) = year(?) AND month(created_at) = month(?) group by driver_id',
-        [driverId, month, month],
-      );
-    const isCurrentMonth = isCurrent(month, 'month');
-    const statistic = await this.statisticRepository.findOneBy({ driverId });
-    return {
-      totalBooking: +(results[0]?.totalBooking || 0),
-      totalPrice: +(results[0]?.totalPrice || 0),
-      totalReject: isCurrentMonth ? statistic?.reject || 0 : undefined,
-    };
-  }
+  // async getStatisticByDriver(driverId: number, month: Date) {
+  //   const results: { totalPrice: string; totalBooking: string }[] =
+  //     await this.bookingRepository.query(
+  //       'SELECT sum(price) totalPrice, count(*) totalBooking FROM bookings WHERE driver_id = ? and status = "COMPLETED" AND year(created_at) = year(?) AND month(created_at) = month(?) group by driver_id',
+  //       [driverId, month, month],
+  //     );
+  //   const isCurrentMonth = isCurrent(month, 'month');
+  //   const statistic = await this.statisticRepository.findOneBy({ driverId });
+  //   return {
+  //     totalBooking: +(results[0]?.totalBooking || 0),
+  //     totalPrice: +(results[0]?.totalPrice || 0),
+  //     totalReject: isCurrentMonth ? statistic?.reject || 0 : undefined,
+  //   };
+  // }
 
-  async getYearStatisticByDriver(driverId: number, year: number) {
-    const result: { month: string; price: string; total: string }[] =
+  async getStatisticByDriver(driverId: number, dto: GetDriverStatisticDto) {
+    const yearQuery =
+      "SELECT month(created_at) value, sum(price) price, count(*) total FROM bookings b where driver_id = ? and status = 'COMPLETED' and year(created_at) = year(?) group by value";
+    const monthQuery =
+      "SELECT day(created_at) value, sum(price) price, count(*) total FROM bookings WHERE driver_id = ? and status = 'COMPLETED' AND year(created_at) = year(?) AND month(created_at) = month(?) group by value";
+    const result: { value: string; price: string; total: string }[] =
       await this.bookingRepository.query(
-        "SELECT month(created_at) month, sum(price) price, count(*) total FROM bookings b where driver_id = ? and status = 'COMPLETED' and year(created_at) = ? group by month",
-        [driverId, year],
+        dto.type === 'year' ? yearQuery : monthQuery,
+        [driverId, dto.date, dto.date],
       );
-    return Array.from({ length: 12 }, (_, i) => {
-      const month = i + 1;
-      const r = result.find((r) => +r.month == month);
+    const length = dto.type === 'year' ? 12 : daysInMonth(dto.date);
+    const statistic = Array.from({ length }, (_, i) => {
+      const value = i + 1;
+      const r = result.find((r) => +r.value == value);
       return {
-        month,
+        value,
         price: +(r?.price || 0),
         total: +(r?.total || 0),
       };
     });
+    const bookings = await this.getBookings(driverId, dto);
+    const matchingStatistic = await this.statisticRepository.findOneBy({
+      driverId,
+    });
+    return { statistic, bookings, reject: matchingStatistic?.reject || 0 };
   }
 
-  async getBookings(driverId: number, month: Date) {
+  async getBookings(driverId: number, dto: GetDriverStatisticDto) {
     return await this.bookingRepository.find({
       where: {
         driverId,
-        createdAt: And(
-          Raw((alias) => `MONTH(${alias}) = MONTH(:month)`, { month }),
-          Raw((alias) => `YEAR(${alias}) = YEAR(:month)`, { month }),
-        ),
+        createdAt:
+          dto.type === 'month'
+            ? And(
+                Raw((alias) => `MONTH(${alias}) = MONTH(:month)`, {
+                  month: dto.date,
+                }),
+                Raw((alias) => `YEAR(${alias}) = YEAR(:year)`, {
+                  year: dto.date,
+                }),
+              )
+            : Raw((alias) => `YEAR(${alias}) = YEAR(:year)`, {
+                year: dto.date,
+              }),
         status: BookingStatus.COMPLETED,
       },
       relations: ['user', 'locations'],

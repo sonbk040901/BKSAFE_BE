@@ -7,8 +7,7 @@ import { DriverService } from './driver.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { FindAllDto } from './dto/find-all.dto';
 import { GetDriverStatisticDto } from './dto/get-driver-statistic.dto';
-import { GetDriverYearStatisticDto } from "@driver/dto/get-driver-year-statistic.dto";
-import { Permit } from "~decors/meta/permit.decorator";
+import { Permit } from '~decors/meta/permit.decorator';
 
 @ApiTags('admin/drivers')
 @AdminCtrl('drivers')
@@ -62,28 +61,28 @@ export class DriverAdminController {
     return this.driverService.action(id, actionDriverDto);
   }
 
+  // @Get(':id/month-statistic')
+  // async getStatisticByDriver(
+  //   @Param('id') id: number,
+  //   @Query() statisticDto: GetDriverStatisticDto,
+  // ) {
+  //   return this.driverService.getStatisticByDriver(id, statisticDto.month);
+  // }
+
   @Get(':id/statistic')
+  @Permit()
   async getStatisticByDriver(
     @Param('id') id: number,
     @Query() statisticDto: GetDriverStatisticDto,
   ) {
-    return this.driverService.getStatisticByDriver(id, statisticDto.month);
+    return this.driverService.getStatisticByDriver(id, statisticDto);
   }
 
-  @Get(':id/year-statistic')
-  @Permit()
-  async getYearStatisticByDriver(
-    @Param('id') id: number,
-    @Query() statisticDto: GetDriverYearStatisticDto,
-  ) {
-    return this.driverService.getYearStatisticByDriver(id, statisticDto.year);
-  }
-
-  @Get(':id/bookings')
-  async getBookings(
-    @Param('id') id: number,
-    @Query() statisticDto: GetDriverStatisticDto,
-  ) {
-    return this.driverService.getBookings(id, statisticDto.month);
-  }
+  // @Get(':id/bookings')
+  // async getBookings(
+  //   @Param('id') id: number,
+  //   @Query() statisticDto: GetDriverStatisticDto,
+  // ) {
+  //   return this.driverService.getBookings(id, statisticDto);
+  // }
 }

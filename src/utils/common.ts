@@ -28,3 +28,6 @@ export const isCurrent = (
     return false;
   }
 };
+export const daysInMonth = (date: Date) => {
+  return new Date(date.getFullYear(), date.getMonth(), 0).getDate();
+};
