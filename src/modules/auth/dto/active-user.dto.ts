@@ -6,6 +6,6 @@ export class ActiveUserDto {
   @IsPhoneNumber('VN')
   phone: string;
   @ApiProperty()
-  @IsString()
+  @IsString({ message: 'Mã kích hoạt không hợp lệ' })
   activationCode: string;
 }
