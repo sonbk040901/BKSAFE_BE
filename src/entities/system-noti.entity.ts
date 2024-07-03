@@ -14,7 +14,6 @@ export class SystemNotification extends BaseEntity {
   @Column()
   content: string;
   @Column()
-  @Column()
   image: string;
   @Column({
     type: 'enum',

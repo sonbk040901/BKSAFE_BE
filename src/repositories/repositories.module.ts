@@ -9,6 +9,7 @@ import { AdminRepository } from '~repos/admin.repository';
 import { NotificationRepository } from '~repos/noti.repository';
 import { SettingRepository } from './setting.repository';
 import { ChatRepository } from '~repos/chat.repository';
+import { SystemNotificationRepository } from '~repos/system-noti.repository';
 
 @Global()
 @Module({
@@ -25,6 +26,7 @@ import { ChatRepository } from '~repos/chat.repository';
     NotificationRepository,
     SettingRepository,
     ChatRepository,
+    SystemNotificationRepository,
   ],
   exports: [
     DriverRepository,
@@ -37,6 +39,7 @@ import { ChatRepository } from '~repos/chat.repository';
     NotificationRepository,
     SettingRepository,
     ChatRepository,
+    SystemNotificationRepository,
   ],
 })
 export class RepositoriesModule {}
