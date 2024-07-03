@@ -19,6 +19,8 @@ import { dataSourceOptions } from './database/dataSource';
 import { JwtAuthModule } from './modules/jwt/jwt.auth.module';
 import { SettingModule } from './modules/setting/setting.module';
 import { UserModule } from './modules/user/user.module';
+import { ChatModule } from '~/modules/chat/chat.module';
+import { NotificationModule } from '~/modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { UserModule } from './modules/user/user.module';
     UserModule,
     ProfileModule,
     SettingModule,
+    ChatModule,
+    NotificationModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
