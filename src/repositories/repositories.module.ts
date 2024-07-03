@@ -8,6 +8,7 @@ import { MatchingStatisticRepository } from '~repos/matching-statistic.repositor
 import { AdminRepository } from '~repos/admin.repository';
 import { NotificationRepository } from '~repos/noti.repository';
 import { SettingRepository } from './setting.repository';
+import { ChatRepository } from '~repos/chat.repository';
 
 @Global()
 @Module({
@@ -23,6 +24,7 @@ import { SettingRepository } from './setting.repository';
     MatchingStatisticRepository,
     NotificationRepository,
     SettingRepository,
+    ChatRepository,
   ],
   exports: [
     DriverRepository,
@@ -34,6 +36,7 @@ import { SettingRepository } from './setting.repository';
     MatchingStatisticRepository,
     NotificationRepository,
     SettingRepository,
+    ChatRepository,
   ],
 })
 export class RepositoriesModule {}

@@ -10,6 +10,8 @@ export class Chat extends BaseEntity {
   @Column()
   driverId: number;
   @Column()
+  isDriver: boolean;
+  @Column()
   message: string;
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
