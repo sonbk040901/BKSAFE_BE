@@ -33,13 +33,12 @@ export const isCurrent = (
 export const daysInMonth = (date: Date) => {
   return new Date(date.getFullYear(), date.getMonth(), 0).getDate();
 };
-export const camelCase = <
-  T extends string | readonly string[] | { [k: string]: unknown },
->(
+
+export const camelCase = <T extends string | readonly string[] | object>(
   input: T,
-): T extends string | readonly string[] ? string : { [k: string]: any } => {
+): T extends object ? Record<string, unknown> : string => {
   if (typeof input === 'object' && !Array.isArray(input)) {
-    const obj: { [k: string]: unknown } = {};
+    const obj: object = {};
     for (const key in input) {
       if (Object.prototype.hasOwnProperty.call(input, key)) {
         obj[defaultCamelCase(key)] = input[key];
