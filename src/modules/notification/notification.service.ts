@@ -26,6 +26,6 @@ export class NotificationService {
   }
 
   deleteSysNotification(id: number) {
-    void this.notificationRepo.delete(id);
+    void this.sysNotificationRepo.delete(id);
   }
 }
