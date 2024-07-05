@@ -1,5 +1,5 @@
-import { IsEnum, IsOptional, IsString, IsUrl } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { IsEmail, IsEnum, IsOptional, IsString, IsUrl } from 'class-validator';
 import { Gender } from '~entities/account.entity';
 
 export class UpdateProfileDto {
@@ -13,4 +13,7 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsUrl()
   avatar?: string;
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 }
