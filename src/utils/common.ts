@@ -49,3 +49,25 @@ export const camelCase = <T extends string | readonly string[] | object>(
   if (typeof input === 'string') return defaultCamelCase(input) as any;
   return defaultCamelCase(input.join('_')) as any;
 };
+
+export const extract = <T extends object, K extends keyof T>(
+  obj: T,
+  keys: K[],
+): Pick<T, K> => {
+  const result: any = {};
+  keys.forEach((key) => {
+    result[key] = obj[key];
+  });
+  return result;
+};
+
+export const exclude = <T extends object, K extends keyof T>(
+  obj: T,
+  keys: K[],
+): Omit<T, K> => {
+  const result: any = { ...obj };
+  keys.forEach((key) => {
+    delete result[key];
+  });
+  return result;
+};

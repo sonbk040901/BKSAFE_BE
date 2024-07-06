@@ -1,11 +1,11 @@
 import { Body, Get, Patch } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UpdatePasswordDto } from '~/modules/profile/dto/update-password.dto';
-import { UpdateProfileDto } from '~/modules/profile/dto/update-profile.dto';
+import { DriverCtrl } from '~decors/controller/controller.decorator';
 import { CurrentAcc } from '~decors/param/current-account.decorator';
 import { Account } from '~entities/account.entity';
+import { UpdateDriverProfileDto } from './dto/update-driver-profile.dto';
 import { ProfileService } from './profile.service';
-import { DriverCtrl } from '~decors/controller/controller.decorator';
 
 @ApiTags('driver/profile')
 @DriverCtrl('profile')
@@ -20,9 +20,9 @@ export class ProfileDriverController {
   @Patch()
   updateProfile(
     @CurrentAcc() account: Account,
-    @Body() updateProfileDto: UpdateProfileDto,
+    @Body() updateProfileDto: UpdateDriverProfileDto,
   ) {
-    return this.profileService.updateProfile(account, updateProfileDto);
+    return this.profileService.updateDriverProfile(account, updateProfileDto);
   }
 
   @Patch('password')
