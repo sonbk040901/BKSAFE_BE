@@ -39,8 +39,9 @@ export class NotificationService {
   }
 
   private async getAll(roleName: RoleName, accountId: number) {
-    const sql = `SELECT n.title, n.content, n.image, n.updated_at, n.created_at, 'personal' as type FROM notifications n inner join users u on u.id = n.account_id where n.target = '${roleName}' and n.account_id = ${accountId} union SELECT  sn.title, sn.content, sn.image, sn.updated_at, sn.created_at, 'system' as type FROM system_notifications sn where sn.target = '${roleName}' OR sn.target = 'ALL' order by created_at desc`;
+    const sql = `SELECT n.id, n.title, n.content, n.image, n.updated_at, n.created_at, 'personal' as type FROM notifications n inner join users u on u.id = n.account_id where n.target = '${roleName}' and n.account_id = ${accountId} union SELECT sn.id, sn.title, sn.content, sn.image, sn.updated_at, sn.created_at, 'system' as type FROM system_notifications sn where sn.target = '${roleName}' OR sn.target = 'ALL' order by created_at desc`;
     const results: {
+      id: number;
       title: string;
       content: string;
       image: string;

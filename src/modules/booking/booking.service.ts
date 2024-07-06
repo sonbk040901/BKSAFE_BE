@@ -30,6 +30,7 @@ import { BookingGateway } from './booking.gateway';
 import { genFindOperator } from '~/repositories/utils';
 import { ignoreExceptions } from '~/utils/common';
 import { PriorityService } from '~/utils/priority.service';
+import { ChatRepository } from '~/repositories/chat.repository';
 
 @Injectable()
 export class BookingService {
@@ -56,6 +57,7 @@ export class BookingService {
     private driverRepository: DriverRepository,
     private statisticRepository: MatchingStatisticRepository,
     private bookingGateway: BookingGateway,
+    private chatRepository: ChatRepository,
   ) {
     this.updateSettings();
   }
@@ -187,7 +189,7 @@ export class BookingService {
     const booking = await this.bookingRepository.findOneByIdAndUserIdAndStatus(
       id,
       userId,
-      [BookingStatus.PENDING, BookingStatus.ACCEPTED],
+      [BookingStatus.PENDING, BookingStatus.ACCEPTED, BookingStatus.RECEIVED],
     );
     if (!booking) throw new BookingNotFoundException();
     booking.status = BookingStatus.CANCELLED;
@@ -210,14 +212,19 @@ export class BookingService {
     });
     if (!bsd) throw new BookingNotFoundException();
     const booking = bsd.booking;
-    await this.bSDRepository.delete({ bookingId: id });
+    void this.bSDRepository.delete({ bookingId: id });
+    // Xóa hết chat giữa tài xế và user trước khi tạo chat mới
+    void this.chatRepository.delete({
+      driverId: account.id,
+      userId: booking.userId,
+    });
     booking.status = BookingStatus.RECEIVED;
     booking.driverId = account.id;
     booking.nextLocationId = bsd.booking.pickupLocation.id;
-    await this.updateMatchingStatistic(account.id, [
+    void this.updateMatchingStatistic(account.id, [
       { increase: true, field: 'accept' },
     ]);
-    await this.driverRepository.update(
+    void this.driverRepository.update(
       { id: account.id },
       { status: DriverStatus.BUSY },
     );
