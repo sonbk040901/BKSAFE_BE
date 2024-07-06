@@ -64,6 +64,13 @@ export class BookingRepository extends Repository<Booking> {
       where: {
         userId,
         status: typeof status === 'object' ? In(status) : status,
+        createdAt: Raw(
+          (alias) =>
+            `YEAR(${alias}) = YEAR(:time) AND MONTH(${alias}) = MONTH(:time)`,
+          {
+            time: findAllDto.time,
+          },
+        ),
       },
       order: { [findAllDto.sort]: findAllDto.order },
       take: findAllDto.take,
@@ -77,11 +84,19 @@ export class BookingRepository extends Repository<Booking> {
     return this.findAndCount({
       where: {
         driverId,
-        status: typeof status === 'object' ? In(status) : status,
+        status: genFindOperator(status),
+        createdAt: Raw(
+          (alias) =>
+            `YEAR(${alias}) = YEAR(:time) AND MONTH(${alias}) = MONTH(:time)`,
+          {
+            time: findAllDto.time,
+          },
+        ),
       },
       order: { [findAllDto.sort]: findAllDto.order },
       take: findAllDto.take,
       skip: findAllDto.skip,
+      relations: ['locations', 'notes', 'user'],
     });
   }
 
@@ -117,13 +132,13 @@ export class BookingRepository extends Repository<Booking> {
     });
   }
 
-  findOneByIdAndDriverId(id: number, driverId: number, relations?: string[]) {
+  findOneByIdAndDriverId(id: number, driverId: number) {
     return this.findOne({
       where: {
         id,
         driverId,
       },
-      relations,
+      relations: ['locations', 'notes', 'user'],
     });
   }
 

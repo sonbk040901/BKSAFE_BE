@@ -1,5 +1,5 @@
 import { PagingAndSortDto } from '~dto/paging-and-sort.dto';
-import { IsEnum, IsOptional } from 'class-validator';
+import { IsDate, IsEnum, IsOptional } from 'class-validator';
 import { BookingStatus } from '~entities/booking.entity';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -21,4 +21,9 @@ export class FindAllDto extends PagingAndSortDto {
     return value.toUpperCase() || undefined;
   })
   status?: BookingStatus | BookingStatus[];
+
+  @IsDate()
+  @Transform(({ value }) => new Date(value))
+  @IsOptional()
+  time: Date = new Date();
 }
