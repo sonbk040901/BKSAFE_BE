@@ -39,7 +39,6 @@ export class BookingDriverController {
   @Patch(':id/accept')
   async acceptBooking(@CurrentAcc() account: Account, @Param('id') id: number) {
     const booking = await this.bookingService.acceptBooking(account, id);
-    this.bookingGateway.updateBooking(booking.userId, booking.id);
     this.bookingGateway.updateBookingDriver(booking.userId, account);
     this.bookingGateway.updateBookingStatus(booking.userId, booking.status);
     return booking;
@@ -57,7 +56,6 @@ export class BookingDriverController {
   @Patch(':id/start')
   async startBooking(@CurrentAcc() account: Account, @Param('id') id: number) {
     const booking = await this.bookingService.startBooking(account, id);
-    this.bookingGateway.updateBooking(booking.userId, booking.id);
     this.bookingGateway.updateBookingStatus(booking.userId, booking.status);
     return booking;
   }
@@ -68,7 +66,6 @@ export class BookingDriverController {
     @Param('id') id: number,
   ) {
     const booking = await this.bookingService.completeBooking(account, id);
-    this.bookingGateway.updateBooking(booking.userId, booking.id);
     this.bookingGateway.updateBookingStatus(booking.userId, booking.status);
     return booking;
   }

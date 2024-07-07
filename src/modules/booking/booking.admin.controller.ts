@@ -39,14 +39,12 @@ export class BookingAdminController {
   @Patch(':id/reject')
   async rejectBooking(@Param('id') bookingId: number) {
     const userId = await this.bookingService.reject(bookingId);
-    this.bookingGateway.updateBooking(userId, bookingId);
     this.bookingGateway.updateBookingStatus(userId, BookingStatus.REJECTED);
   }
 
   @Patch(':id/timeout')
   async stopFindDriver(@Param('id') bookingId: number) {
     const userId = await this.bookingService.timeout(bookingId);
-    this.bookingGateway.updateBooking(userId, bookingId);
     this.bookingGateway.updateBookingStatus(userId, BookingStatus.TIMEOUT);
   }
 
@@ -68,6 +66,6 @@ export class BookingAdminController {
       driverId,
     );
     this.bookingGateway.suggestDriver(driverId, bookingId);
-    this.bookingGateway.updateBooking(booking.userId, bookingId);
+    this.bookingGateway.updateBookingStatus(booking.userId, booking.status);
   }
 }

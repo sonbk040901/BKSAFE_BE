@@ -25,11 +25,9 @@ export class BookingUserController {
     const booking = await this.bookingService.create(createBookingDto, userId);
     const bookingId = booking.id;
     if (!this.bookingService.getFindDriverMode()) {
-      this.bookingGateway.updateBooking(userId, bookingId);
       this.bookingGateway.newPendingBooking(bookingId);
       return booking;
     }
-    this.bookingGateway.updateBooking(userId, bookingId);
     this.bookingGateway.newAcceptedBooking(bookingId);
     return booking;
   }
@@ -60,7 +58,7 @@ export class BookingUserController {
     @Param('id') bookingId: number,
   ) {
     const booking = await this.bookingService.cancel(userId, bookingId);
-    this.bookingGateway.updateBooking(userId, bookingId);
+    this.bookingGateway.updateBookingStatus(userId, booking.status);
     return booking;
   }
 
