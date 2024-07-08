@@ -7,6 +7,7 @@ import {
   AccountNotActivatedException,
   ActivationIncorrectWrongException,
   DriverAlreadyExistsException,
+  DriverNotAcceptedDriverException,
   DriverRegisterIsPending,
   PhoneNumberAlreadyExistsException,
   PhoneOrPasswordIncorrectException,
@@ -54,7 +55,7 @@ export class AuthService extends BaseAccountService implements IAuthVerify {
     if (!account) throw new PhoneOrPasswordIncorrectException();
     if (!account.isActivated()) throw new AccountNotActivatedException();
     if (account.isDriver() && !account.isRegisterStatusAccepted())
-      throw new AccountNotActivatedException();
+      throw new DriverNotAcceptedDriverException();
 
     const isMatch = await this.bcryptService.compare(
       loginDto.password,

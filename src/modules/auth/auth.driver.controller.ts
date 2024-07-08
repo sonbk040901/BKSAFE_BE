@@ -10,6 +10,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { DriverCtrl } from '~decors/controller/controller.decorator';
 import { RoleName } from '~/common/enums/role-name.enum';
 import { RegisterDriverDto } from '@auth/dto/register-driver.dto';
+import { extract } from '~/utils/common';
 
 @ApiTags('driver/auth')
 @DriverCtrl('auth')
@@ -24,7 +25,18 @@ export class AuthDriverController {
   @Permit()
   @Post('register')
   register(@Body() register: RegisterDriverDto) {
-    return this.authService.register(register, RoleName.DRIVER);
+    const extracted = extract(register, [
+      'address',
+      'birthday',
+      'cccd',
+      'email',
+      'fullName',
+      'phone',
+      'password',
+      'gender',
+      'license',
+    ]);
+    return this.authService.register(extracted, RoleName.DRIVER);
   }
 
   @Permit()

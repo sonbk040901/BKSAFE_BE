@@ -110,6 +110,12 @@ export class AccountNotActivatedException extends ConflictException {
     super('Tài khoản chưa xác thực 😡!');
   }
 }
+// exeption tài khoản tài xế chưa được duyệt
+export class DriverNotAcceptedDriverException extends ConflictException {
+  constructor() {
+    super('Tài khoản tài xế chưa được duyệt 😡!');
+  }
+}
 
 export class DistanceTooFarException extends BadRequestException {
   constructor() {

@@ -17,7 +17,7 @@ export class RegisterDto {
   @IsEmail({}, { message: 'Email không hợp lệ' })
   email: string;
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Họ và tên không được để trống' })
   fullName: string;
   @ApiProperty({
     default: '0353763099',
