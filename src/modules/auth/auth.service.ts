@@ -1,8 +1,8 @@
+import { ActiveUserDto } from '@auth/dto/active-user.dto';
+import { RegisterDriverByUserDto } from '@auth/dto/register-driver-by-user.dto';
 import { Injectable } from '@nestjs/common';
-import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto } from './dto/login.dto';
-import { AuthPayload } from './interfaces/auth-payload.interface';
+import { RoleName } from '~/common/enums/role-name.enum';
 import {
   AccountNotActivatedException,
   ActivationIncorrectWrongException,
@@ -14,17 +14,18 @@ import {
   UserAlreadyActivatedException,
   UserNotFoundException,
 } from '~/common/exceptions/httpException';
-import { BcryptService } from '~utils/bcrypt.service';
-import { DriverRepository } from '~repos/driver.repository';
-import { DriverStatus, RegisterStatus } from '~entities/driver.entity';
-import { UserRepository } from '~repos/user.repository';
-import { Account, ActivateStatus } from '~entities/account.entity';
-import { RegisterDriverByUserDto } from '@auth/dto/register-driver-by-user.dto';
-import { AdminRepository } from '~repos/admin.repository';
-import { ActiveUserDto } from '@auth/dto/active-user.dto';
 import { BaseAccountService } from '~/common/services/base-account.service';
-import { RoleName } from '~/common/enums/role-name.enum';
+import { extract } from '~/utils/common';
+import { Account, ActivateStatus } from '~entities/account.entity';
+import { DriverStatus, RegisterStatus } from '~entities/driver.entity';
 import { IAuthVerify } from '~interfaces/auth-verify.interface';
+import { AdminRepository } from '~repos/admin.repository';
+import { DriverRepository } from '~repos/driver.repository';
+import { UserRepository } from '~repos/user.repository';
+import { BcryptService } from '~utils/bcrypt.service';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { AuthPayload } from './interfaces/auth-payload.interface';
 
 @Injectable()
 export class AuthService extends BaseAccountService implements IAuthVerify {
@@ -88,10 +89,8 @@ export class AuthService extends BaseAccountService implements IAuthVerify {
     //todo: gửi mã xác nhận qua phone
   }
 
-  async registerDriverByUser(
-    account: Account,
-    register: RegisterDriverByUserDto,
-  ) {
+  async registerDriverByUser(account: Account, dto: RegisterDriverByUserDto) {
+    const register = extract(dto, ['address', 'birthday', 'cccd', 'license']);
     const existedDriver = await this.driverRepository.findOneByPhone(
       account.phone,
     );
@@ -110,6 +109,13 @@ export class AuthService extends BaseAccountService implements IAuthVerify {
     // Bỏ qua bước kích hoạt tài khoản cho tài xế
     driver.activateStatus = ActivateStatus.ACTIVATED;
     return this.driverRepository.save(driver);
+  }
+
+  async checkDriverRegisterStatus(account: Account) {
+    const driver = await this.driverRepository.findOneByPhone(account.phone);
+    if (!driver) return null;
+    console.log(driver.registerStatus);
+    return driver.registerStatus;
   }
 
   async active(

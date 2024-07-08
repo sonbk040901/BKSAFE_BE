@@ -1,16 +1,15 @@
+import { ActiveUserDto } from '@auth/dto/active-user.dto';
+import { RegisterDriverByUserDto } from '@auth/dto/register-driver-by-user.dto';
 import { Body, Get, HttpCode, Patch, Post, Res } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
+import { ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
+import { UserCtrl } from '~decors/controller/controller.decorator';
 import { Permit } from '~decors/meta/permit.decorator';
 import { CurrentAcc } from '~decors/param/current-account.decorator';
 import { Account } from '~entities/account.entity';
+import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { Roles } from '~decors/meta/roles.decorator';
-import { RegisterDriverByUserDto } from '@auth/dto/register-driver-by-user.dto';
-import { Response } from 'express';
-import { ActiveUserDto } from '@auth/dto/active-user.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { UserCtrl } from '~decors/controller/controller.decorator';
+import { RegisterDto } from './dto/register.dto';
 
 @ApiTags('user/auth')
 @UserCtrl('auth')
@@ -30,12 +29,16 @@ export class AuthUserController {
 
   // Api để đăng ký tài khoản cho tài xế nếu đã có tài khoản người dùng
   @Post('register/driver')
-  @Roles('user')
   registerDriverByUser(
     @CurrentAcc() userAccount: Account,
     @Body() register: RegisterDriverByUserDto,
   ) {
     return this.authService.registerDriverByUser(userAccount, register);
+  }
+
+  @Get('register/driver/check')
+  checkDriverRegisterStatus(@CurrentAcc() userAccount: Account) {
+    return this.authService.checkDriverRegisterStatus(userAccount);
   }
 
   @Permit()
