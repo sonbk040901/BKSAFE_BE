@@ -58,7 +58,11 @@ export class BookingUserController {
     @Param('id') bookingId: number,
   ) {
     const booking = await this.bookingService.cancel(userId, bookingId);
-    this.bookingGateway.updateBookingStatus(userId, booking.status);
+    this.bookingGateway.updateBookingStatus(
+      userId,
+      booking.status,
+      booking.driverId,
+    );
     return booking;
   }
 

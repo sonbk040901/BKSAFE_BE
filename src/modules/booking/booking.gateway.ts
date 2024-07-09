@@ -11,8 +11,16 @@ export class BookingGateway extends BaseGateway {
     super(authService);
   }
 
-  updateBookingStatus(userId: number, status: BookingStatus) {
+  updateBookingStatus(
+    userId: number,
+    status: BookingStatus,
+    driverId?: number,
+  ) {
     this.emitToUser(userId, 'current-status', status);
+    if (driverId) {
+      this.emitToDriver(driverId, 'current-status', status);
+    }
+    this.emitToAdmin('current-status', { status, userId, driverId });
   }
 
   updateBookingDriver(userId: number, driver: Account) {
