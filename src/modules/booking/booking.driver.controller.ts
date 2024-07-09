@@ -26,6 +26,11 @@ export class BookingDriverController {
     return this.bookingService.driverFindCurrent(account);
   }
 
+  @Get('current/check')
+  checkCurrent(@CurrentAcc() account: Account) {
+    return this.bookingService.driverCheckCurrent(account);
+  }
+
   @Get('receive')
   findOneReceive(@CurrentAcc() account: Account) {
     return this.bookingService.driverFindOneReceive(account);

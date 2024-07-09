@@ -453,6 +453,14 @@ export class BookingService {
     return booking;
   }
 
+  async driverCheckCurrent(account: Account) {
+    const isExist = await this.bookingRepository.query(
+      "SELECT 1 FROM bookings WHERE driver_id = ? AND status = 'DRIVING' OR status='RECEIVED' LIMIT 1",
+      [account.id],
+    );
+    return !!isExist.length;
+  }
+
   driverFindOne(account: Account, id: number) {
     return this.bookingRepository.findOneByIdAndDriverId(id, account.id);
   }
