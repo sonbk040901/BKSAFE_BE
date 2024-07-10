@@ -42,9 +42,9 @@ export class BookingService {
    */
   private readonly FIND_DRIVER_TIMEOUT = 5 * 60 * 1000;
   private readonly SUGGEST_TIMEOUT = 21_000;
-  private readonly FIND_DRIVER_INTERVAL = 1_000;
+  private readonly FIND_DRIVER_INTERVAL = 5_500;
   private readonly MAX_SUGGEST_DRIVER = 5;
-  private readonly MAX_SUGGEST_DRIVER_RADIUS = 2500;
+  private readonly MAX_SUGGEST_DRIVER_RADIUS = 2_500;
 
   constructor(
     private drivingCostService: DrivingCostService,
@@ -104,7 +104,10 @@ export class BookingService {
     if (!this.autoFindDriver) return booking;
     //Cứ mỗi 1 giây tìm 1 lần tài xế
     const ti = setInterval(() => {
-      this.autoSuggestDriver(pickup, booking.id);
+      this.autoSuggestDriver(pickup, booking.id).catch((error) => {
+        console.error(error);
+        clearInterval(ti);
+      });
     }, this.FIND_DRIVER_INTERVAL);
     //Sau 5 phút không tìm được tài xế thì chuyển trạng thái booking sang timeout
     setTimeout(() => {
@@ -137,7 +140,7 @@ export class BookingService {
       bookingId,
     );
     if (!suggestDrivers.length) {
-      await this.bSDRepository.delete({ bookingId });
+      await this.bSDRepository.delete({ bookingId, isRejected: true });
       return;
     }
     const driver = suggestDrivers[0];
