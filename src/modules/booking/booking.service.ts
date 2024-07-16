@@ -102,13 +102,15 @@ export class BookingService {
     });
     await this.bookingRepository.save(booking);
     if (!this.autoFindDriver) return booking;
-    //Cứ mỗi 1 giây tìm 1 lần tài xế
-    const ti = setInterval(() => {
+    const autoSuggest = () => {
       this.autoSuggestDriver(pickup, booking.id).catch((error) => {
         console.error(error);
         clearInterval(ti);
       });
-    }, this.FIND_DRIVER_INTERVAL);
+    };
+    //Cứ mỗi 1 giây tìm 1 lần tài xế
+    const ti = setInterval(autoSuggest, this.FIND_DRIVER_INTERVAL);
+    autoSuggest();
     //Sau 5 phút không tìm được tài xế thì chuyển trạng thái booking sang timeout
     setTimeout(() => {
       clearInterval(ti);

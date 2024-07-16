@@ -15,6 +15,9 @@ export class PriorityService {
   }
 
   calculateNormalDistribution(x: number, variance: number) {
+    if (variance === 0) {
+      return 1;
+    }
     const mean = 0;
     const sd = Math.sqrt(variance); // độ lệch chuẩn
     const dividend = Math.exp(-((x - mean) ** 2) / (2 * variance)); // tử số
